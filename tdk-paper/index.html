@@ -50,8 +50,8 @@
                                 <a href="#Computer vision" class="document-toc-link toc-item-indent">Computer vision</a>
                             </li>
                             <li class="document-toc-item">
-                                <a href="#Flow chemistry and Taylor Flow" class="document-toc-link toc-item-indent">Flow
-                                    chemistry andTaylor Flow</a>
+                                <a href="#Flow chemistry and Taylor flow" class="document-toc-link toc-item-indent">Flow
+                                    chemistry and Taylor flow</a>
                             </li>
                             <li class="document-toc-item">
                                 <a href="#Developing the application" class="document-toc-link">Developing the
@@ -96,7 +96,7 @@
                                     Use-Cases</a>
                             </li>
                             <li class="document-toc-item">
-                                <a href="#Rerefences" class="document-toc-link">Rerefences</a>
+                                <a href="#References" class="document-toc-link">References</a>
                             </li>
                         </ul>
                     </section>
@@ -115,7 +115,7 @@
                 <h1>Computer Vision Based Volume Measurement in Two-phase Flow Systems - A Condensed Overview</h1>
 
                 <div class="article-date">
-                    <span>2024.06.02</span>
+                    <span>2024.06.08.</span>
                     <span>20-27 minute read</span>
                 </div>
 
@@ -151,11 +151,11 @@
 
                 <p>Alongside its widespread usage it is noteworthy that the adaptation of computer vision happens at
                     different rates across various fields. This roots primarily in the interdisciplinary nature of this
-                    task, requiring specialists and cross-industry collaboration. Flow chemistry is a good example where
-                    despite the high level of integration of information technology, computer vision based applications
-                    are rare.</p>
+                    task, requiring specialists and cross-industry collaboration. Flow chemistry is a good example
+                    where, despite the high level of integration of information technology, computer vision based
+                    applications are rare.</p>
 
-                <h3 id="Flow chemistry and Taylor Flow">Flow chemistry and Taylor Flow</h3>
+                <h3 id="Flow chemistry and Taylor flow">Flow chemistry and Taylor flow</h3>
 
                 <p>Flow chemistry has emerged in the last decade as an enabler technology that can provide an enhanced
                     safety profile for reactions that involve hazardous or explosive intermediates, or for processes
@@ -203,7 +203,7 @@
                     </figcaption>
                 </figure>
 
-                <p>Hydrogen has a low solubility in the used Dichloromethane (DCM) solvent at atmospheric pressure.
+                <p>Hydrogen has a low solubility in the used dichloromethane (DCM) solvent at atmospheric pressure.
                     Therefore the amount of gas venting from the solution downstream of the back-pressure regulator,
                     when the total pressure could relax to atmospheric pressure, is a reasonably accurate measure of the
                     gas absorbed by the flow stream in the reactor. By adding red dye to the solvent, the gas and the
@@ -252,8 +252,8 @@
                     peristaltic pumps (1.2 ml/min individual flow rate) into a common tube. This tube passed through the
                     video recording section to a burette. (The pumps and burette were regular lab equipment, their
                     operation described in detail within my paper.) The videos were captured in a resolution of 1280x720
-                    pixels and 50 frames per second (fps) using a Canon EOS 70D camera and Canon EF-S 60mm f/2.8 USM
-                    lens.</p>
+                    pixels and 50 frames per second (fps) using a Canon EOS 70D camera equipped with Canon EF-S 60mm
+                    f/2.8 USM lens.</p>
 
                 <figure>
                     <img src="experimental-setup.png" alt="Experimental setup">
@@ -268,18 +268,18 @@
                     backlight was crucial for providing consistent lighting conditions. It eliminated shadows and other
                     environmental noises, while also enhancing the visibility of the examined tube section. The plastic
                     ruler acted as the reference, enabling the conversion of length between pixels and millimeters. The
-                    heat resistant circular glass tube provided a fully transparent and mechanically stable tube
+                    heat-resistant circular glass tube provided a fully transparent and mechanically stable tube
                     section. The latter was important as at low flow rates, the pulsating nature of the peristaltic
                     pumps would make a flexible pipe move. The internal diameters of the tested tubes were 2.8 mm, 3.95
                     mm, 4.8 mm, and 8 mm, respectively. The channel width of 8 mm was too big for the Taylor flow to
                     form. Regarding the others, two observations were made. Firstly, the bigger the diameter is, the
                     more visible the phase boundaries could be made. Furthermore, the smaller the diameter is, the more
-                    rotationally symmetrical the bubbles become. (The ends of the bubble can bend upward.) The tube with
-                    the diameter of 3.95 mm provided a good compromise and was chosen for the final setup. Lastly,
-                    pieces of black paper were laid parallel to the tube for enhancing the contrast of the phase
-                    boundaries. While analyzing some recordings, it was recognized that as the bubbles are passing along
-                    an object near the tube, its reflection appears in the border of the bubble. This phenomenon turned
-                    out to be a cornerstone of the application, allowing great simplifications.</p>
+                    rotationally symmetrical the bubbles become. (The ends of a bubble can bend upward in a horizontal
+                    tube.) The tube with the diameter of 3.95 mm provided a good compromise and was chosen for the final
+                    setup. Lastly, pieces of black paper were laid parallel to the tube for enhancing the contrast of
+                    the phase boundaries. While analyzing some recordings, it was recognized that as the bubbles are
+                    passing along an object near the tube, its reflection appears in the border of the bubble. This
+                    phenomenon turned out to be a cornerstone of the application, allowing great simplifications.</p>
 
                 <figure>
                     <img src="vlcsnap-2017-11-11-15h43m39s445.png" alt="Recording snapshot">
@@ -331,7 +331,7 @@
 
                 <p>The gas volume measurement relied on the assumption that the elongated gas bubbles could be
                     approximated as cylinders with half-spheres at their ends. (This assumption is also backed up by
-                    [14], which states that at low Capillary numbers the gas bubble can be approximated as a cylinder
+                    [14], which states that at low capillary numbers the gas bubble can be approximated as a cylinder
                     with hemispherical caps at the ends. This section, however, was only noticed while creating this
                     summary, 6 years after the conference.) A bubble’s volume, therefore, would be equal to the volume
                     of a cylinder of equal height, minus a calibration value due to the ends. The diameter of a bubble
@@ -393,7 +393,7 @@
                             Objects are assigned a random colour upon their appearance which is kept
                             until they disappear.
                             This enables the manual verification of the object tracking.
-                            For each bubble, their volume in ul (or mm^3), their length in pixels,
+                            For each bubble, their volume in μl (or mm^3), their length in pixels,
                             and their lifetime is printed alongside them.
                         </span>
                     </figcaption>
@@ -699,7 +699,7 @@
                     enabling parameter sweeps in order to optimize processes and to better understand the
                     characteristics of the small-channel Taylor flow.</p>
 
-                <h2 id="References">Rerefences</h2>
+                <h2 id="References">References</h2>
 
                 <div class="citation">
                     <p>
