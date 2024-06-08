@@ -1,0 +1,54 @@
+# Simple workflow for deploying static content to GitHub Pages
+name: Deploy to Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: [$default-branch]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Single deploy job no building
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{steps.deployment.outputs.page_url}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire directory
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+# Sources:
+# https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
+# https://github.com/marketplace/actions/configure-github-pages
+# https://github.com/marketplace/actions/upload-github-pages-artifact
+# https://github.com/marketplace/actions/deploy-github-pages-site
+# https://github.com/actions/starter-workflows/blob/main/pages/static.yml
+# https://github.com/actions/starter-workflows/blob/main/pages/mdbook.yml#
