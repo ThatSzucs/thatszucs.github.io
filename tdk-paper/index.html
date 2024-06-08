@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Computer Vision Based Volume Measurement in Two-phase Flow Systems - A Condensed Overview</title>
+    <script src="index.js" type="module"></script>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💡</text></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+
+    <div class="top-navigation-container">
+        <header class="top-navigation container">
+
+            <div class="top-navigation-title">
+                <a href=".." class="title-logo">💡 ThatSzucs' Project Spotlights</a>
+            </div>
+
+            <div class="top-navigation-main">
+                <div>
+                    <a href="https://github.com/ThatSzucs/" target="_blank" class="nav-link">
+                        <i class="fa fa-github"></i>
+                        Github
+                    </a>
+                </div>
+            </div>
+
+        </header>
+    </div>
+
+
+    <main class="blog-post-container container">
+
+        <div class="toc-container">
+            <aside class="toc">
+                <nav class="document-toc-container">
+                    <section class="document-toc">
+                        <header>
+                            <h2 class="document-toc-heading">In this post</h2>
+                        </header>
+                        <ul class="document-toc-list">
+                            <li class="document-toc-item">
+                                <a href="#introduction" class="document-toc-link">Introduction</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#computer-vision" class="document-toc-link toc-item-indent">Computer vision</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#Flow chemistry and Taylor Flow" class="document-toc-link toc-item-indent">Flow
+                                    chemistry andTaylor Flow</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#Developing the application" class="document-toc-link">Developing the
+                                    application</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#Experimental setup" class="document-toc-link toc-item-indent">Experimental
+                                    setup</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#Algorithms" class="document-toc-link toc-item-indent">Algorithms</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#Implementation" class="document-toc-link toc-item-indent">Implementation</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#Testing" class="document-toc-link">Testing</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#Real-time constraints" class="document-toc-link toc-item-indent">Real-time
+                                    constraints</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#Accuracy" class="document-toc-link toc-item-indent">Accuracy</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#Conclusions" class="document-toc-link">Conclusions</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#Future work" class="document-toc-link">Future work</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#Experimental setup variations"
+                                    class="document-toc-link toc-item-indent">Experimental setup variations</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#Improving the accuracy" class="document-toc-link toc-item-indent">Improving
+                                    the accuracy</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#Further Use-Cases" class="document-toc-link toc-item-indent">Further
+                                    Use-Cases</a>
+                            </li>
+                            <li class="document-toc-item">
+                                <a href="#Rerefences" class="document-toc-link">Rerefences</a>
+                            </li>
+                        </ul>
+                    </section>
+                </nav>
+            </aside>
+        </div>
+
+        <div class="blog-post">
+
+            <article>
+
+                <figure>
+                    <img src="experimental-setup.png" alt="Cover image">
+                </figure>
+
+                <h1>Computer Vision Based Volume Measurement in Two-phase Flow Systems - A Condensed Overview</h1>
+
+                <div class="article-date">
+                    <span>2024.06.02</span>
+                    <span>20-27 minute read</span>
+                </div>
+
+                <p>This work provides a concise summary of my research paper submitted to the Students' Scientific
+                    Conference (TDK) organized in 2017 by the Faculty of Electrical Engineering and Informatics (VIK) at
+                    the Budapest University of Technology and Economics (BME). The paper was awarded second place within
+                    the Intelligent Systems section.
+
+                    <a href="http://tdk.bme.hu/VIK/Intelligens3/Gaz-terfogatanak-merese-ketfazisu-aramlasi"
+                        target="_blank">
+                        Access the original version in Hungarian on the official TDK website.
+                        <i class="fa fa-external-link" aria-hidden="true"></i>
+                    </a>
+
+                </p>
+
+                <h2 id="introduction">Introduction</h2>
+
+                <p>Automation has a significant impact on society and the economy. It is desired in many areas for
+                    addressing the limitations of manual labor, increasing productivity and providing consistent quality
+                    and output. Moreover, the advancement of technology further drives its incorporation through
+                    reducing the costs of adaptation and enabling the automation of an expanding range of tasks. The
+                    latter is greatly exemplified by computer vision.</p>
+
+                <h3 id="computer-vision">Computer vision</h3>
+
+                <p>Computer vision is a rapidly growing field devoted to analyzing, transforming and high level
+                    understanding of images [1]. It is used in a diverse set of domains. Cameras can detect and focus on
+                    faces. Video call applications can blur the background to increase user privacy. Programs can
+                    transcribe text from pictures. Soldering errors and missing parts can be detected on printed circuit
+                    boards [2], [3]. Faulty products can be identified in the food industry by inspecting the shape,
+                    volume, surface and the color [4], [5].</p>
+
+                <p>Alongside its widespread usage it is noteworthy that the adaptation of computer vision happens at
+                    different rates across various fields. This roots primarily in the interdisciplinary nature of this
+                    task, requiring specialists and cross-industry collaboration. Flow chemistry is a good example where
+                    despite the high level of integration of information technology, computer vision based applications
+                    are rare.</p>
+
+                <h3 id="Flow chemistry and Taylor Flow">Flow chemistry and Taylor Flow</h3>
+
+                <p>Flow chemistry has emerged in the last decade as an enabler technology that can provide an enhanced
+                    safety profile for reactions that involve hazardous or explosive intermediates, or for processes
+                    which involve high temperatures or pressures [6]. Additionally, it often facilitates rapid reactions
+                    with short-lived reactive intermediates [6]. Compared to batch processes, flow systems allow finer
+                    control over the reaction parameters and conditions. With proper monitoring tools such a high level
+                    of automatization can be achieved that systems can scan a wide range of parameters in order to find
+                    the optimum [7].</p>
+
+                <p>In the past decades, the study and industrial application of gas-liquid two-phase flow in
+                    small-channel systems have become a significant area [8], [9], [10], [11], [12]. One of the dominant
+                    flow regimes (flow patterns) in such systems is the Taylor flow [13], [14], [15], which consists of
+                    elongated bubbles separated by liquid slugs (liquid plugs). The hydrodynamic properties of the
+                    Taylor flow make it attractive for carrying out gas-liquid operations [13], resulting in its usage
+                    within various industrial processes [14]. For understanding the behavior and improving the
+                    performance of chemical systems that operate in this regime, knowing the flow characteristics is
+                    crucial [13]. This requires the measurement of the flow parameters [12], such as - but not limited
+                    to - phase velocity, bubble and slug lengths, and the void fraction [12], [13], [14]. Additionally,
+                    the small-channel flow characteristics complicate the measurement of these parameters compared to
+                    normal-scale channels, thus knowing which techniques to apply is critical [12]. The potential for
+                    automating the measurement of flow parameters of small-channel gas-liquid two-phase flow systems is
+                    illustrated through the example of a recently published chemical application [6].</p>
+
+                <figure>
+                    <img src="taylor-flow.png" alt="Taylor flow" , class="small_figure">
+                    <figcaption>
+                        <span>Figure 1:</span>
+                        <span>The Taylor flow.</span>
+                    </figcaption>
+                </figure>
+
+                <p>A British research team has developed a reactor, based on a semi-permeable Teflon® AF-2400 membrane,
+                    which allows the advantageous execution of catalytic hydrogenation reactions at elevated pressure in
+                    flow within organic chemical synthesis. The device enables both the uptake of hydrogen into the
+                    solution and the removal of it. The quantitative measurement of the gas permeation used the
+                    traditional burette method at first, but was later simplified with a novel computer vision based
+                    "bubble counting" approach.</p>
+
+                <figure>
+                    <img src="outgassing-measuring-apparatus.png" alt="Outgassing measuring apparatus" ,
+                        class="small_figure">
+                    <figcaption>
+                        <span>Figure 2:</span>
+                        <span>The apparatus for measuring the outgassing [16].</span>
+                    </figcaption>
+                </figure>
+
+                <p>Hydrogen has a low solubility in the used Dichloromethane (DCM) solvent at atmospheric pressure.
+                    Therefore the amount of gas venting from the solution downstream of the back-pressure regulator,
+                    when the total pressure could relax to atmospheric pressure, is a reasonably accurate measure of the
+                    gas absorbed by the flow stream in the reactor. By adding red dye to the solvent, the gas and the
+                    liquid could be distinguished by color. A section of tubing wrapped several times around a frame was
+                    held in place in the view of a camera. Using a calibration photo and basic image processing,
+                    approximating the concentration of hydrogen was reduced to counting the number of red and white
+                    pixels.</p>
+
+                <figure>
+                    <img src="bubble-counting-method.jpg" alt="Bubble counting method">
+                    <figcaption>
+                        <span>Figure 3:</span>
+                        <span>
+                            The bubble counting method of [6].
+                            a: calibration run, reactor not pressurized.
+                            b: thresholding pixels to be either red or white.
+                            c: photograph of outlet tubing from pressurized reactor.
+                            d: thresholded image from pressurized reactor.
+                        </span>
+                    </figcaption>
+                </figure>
+
+                <p>Since the camera, the pump system and the pressure regulator can be placed under computer control,
+                    the measurement can be fully automated. Such bubble counting application can facilitate the
+                    measurement of gas inlet system efficiency and equilibrium gas solubility data on a wide range of
+                    substances, while being simpler and faster to carry out than many currently available methods [17],
+                    [18], [19], [20]. </p>
+
+                <p>However, the approach has certain limitations. It relies on a colorful dye, requires a long tube
+                    section (1.54 m), stops and waits for the flow to relax before taking the pictures, and can only
+                    directly measure the concentration of hydrogen. My goal was to create an application that can
+                    overcome these limitations and effectively measure the volume of passing gas in small-channel
+                    gas-liquid two-phase flow systems operating in the Taylor flow regime.</p>
+
+                <h2 id="Developing the application">Developing the application</h2>
+
+                <p>The development of the application was an iterative process, during which the experimental setup and
+                    the program evolved side by side. The setup enabled the recording of videos and reference values,
+                    supporting the evaluation of a diverse set of approaches and algorithms. This evaluation, in turn,
+                    guided the refinement of the setup. The overview of the final experimental setup, processing
+                    algorithm and implementation are presented in the following sections.
+                </p>
+
+                <h3 id="Experimental setup">Experimental setup</h3>
+
+                <p>In the final experimental setup, air and deionised water were pumped separately through two
+                    peristaltic pumps (1,2 mL/min individual flow rate) into a common tube. This tube passed through the
+                    video recording section to a burette. (The pumps and burette were regular lab equipment, their
+                    operation described in detail within my paper.) The videos were captured in a resolution of 1280x720
+                    pixels and 50 frames per second (fps) using a Canon EOS 70D camera and Canon EF-S 60mm f/2.8 USM
+                    lens.</p>
+
+                <figure>
+                    <img src="experimental-setup.png" alt="Experimental setup">
+                    <figcaption>
+                        <span>Figure 4:</span>
+                        <span>The experimental setup.</span>
+                    </figcaption>
+                </figure>
+
+                <p>The video recording section had an effective length of 7 cm and was constructed from a backlight
+                    source, a plastic ruler, a heat-resistant circular glass tube and pieces of black paper. The
+                    backlight was crucial for providing consistent lighting conditions. It eliminated shadows and other
+                    environmental noises, while also enhancing the visibility of the examined tube section. The plastic
+                    ruler acted as the reference, enabling the conversion of length between pixels and millimeters. The
+                    heat resistant circular glass tube provided a fully transparent and mechanically stable tube
+                    section. The latter was important as at low flow rates, the pulsating nature of the peristaltic
+                    pumps would make a flexible pipe move. The internal diameters of the tested tubes were 2.8 mm, 3.95
+                    mm, 4.8 mm, and 8 mm, respectively. The channel width of 8 mm was too big for the Taylor flow to
+                    form. Regarding the others, two observations were made. Firstly, the bigger the diameter is, the
+                    more visible the phase boundaries could be made. Furthermore, the smaller the diameter is, the more
+                    rotationally symmetrical the bubbles become. (The ends of the bubble can bend upward.) The tube with
+                    the diameter of 3.95 mm provided a good compromise and was chosen for the final setup. Lastly,
+                    pieces of black paper were laid parallel to the tube for enhancing the contrast of the phase
+                    boundaries. While analyzing some recordings, it was recognized that as the bubbles are passing along
+                    an object near the tube, its reflection appears in the border of the bubble. This phenomenon turned
+                    out to be a cornerstone of the application, allowing great simplifications.</p>
+
+                <figure>
+                    <img src="vlcsnap-2017-11-11-15h43m39s445.png" alt="Recording snapshot">
+                    <figcaption>
+                        <span>Figure 5:</span>
+                        <span>Snapshot of a recording.</span>
+                    </figcaption>
+                </figure>
+
+                <h3 id="Algorithms">Algorithms</h3>
+
+                <p>The processing algorithm tasked with calculating the volume of the gas consisted of three main
+                    sections. The location, the tracking and the measurement of the gas bubbles.</p>
+
+                <p>The bubble location built on the gas boundary darkening technique of the experimental setup. Using a
+                    reference image taken of the water-filled recording section, the bubble outlines could be located
+                    with grayscale image differencing. To ensure having one contiguous contour per bubble, the
+                    fragmented outlines could be united with image processing techniques such as thresholding and
+                    morphology.</p>
+
+                <figure>
+                    <div class="multi-img-figure">
+                        <img src="0_original ROI.png" alt="0">
+                        <img src="1_absdiff.png" alt="1">
+                        <img src="2_threshold_45.png" alt="2">
+                        <img src="3_dilate_3x3 once.png" alt="3">
+                        <img src="4_HOM_X_4x4.png" alt="4">
+                        <img src="5_HOM_-_30.png" alt="5">
+                        <img src="6_HOM_-_8.png" alt="6">
+                        <img src="7_thinning.png" alt="6">
+                    </div>
+                    <figcaption>
+                        <span>Figure 6:</span>
+                        <span>
+                            Retrieval of the bubble boundary for an extreme case.
+                            The steps include greyscale differencing, binary thresholding,
+                            dilating and hit-or-miss transformations with multiple kernels.
+                            The thinning operation at the end is just for representation,
+                            showing the unification of the bubble boundary.
+                        </span>
+                    </figcaption>
+                </figure>
+
+                <p>Using the spatial overlap of the areas outlined by the contours across consecutive video frames, the
+                    bubbles could be identified and tracked. The contours on the new frame with no suitable overlaps
+                    with already tracked objects belong to newly sighted objects, while tracked objects without suitable
+                    overlaps on the new frame do disappear. This overlap-based approach would also be capable of
+                    handling the bubbles splitting up and merging together, had it been necessary.</p>
+
+                <p>The gas volume measurement relied on the assumption that the elongated gas bubbles could be
+                    approximated as cylinders with half-spheres at their ends. (This assumption is also backed up by
+                    [14], which states that at low Capillary numbers the gas bubble can be approximated as a cylinder
+                    with hemispherical caps at the ends. This section, however, was only noticed while creating this
+                    summary, 6 years after the conference.) A bubble’s volume, therefore, would be equal to the volume
+                    of a cylinder of equal height, minus a calibration value due to the ends. The diameter of a bubble
+                    can be approximated with the diameter of the glass tube. The length can be estimated with the width
+                    of the smallest enclosing rectangle, when the entire bubble is visible. (The bubble is fully visible
+                    when there is sufficient distance between the bubble and the sections at which it enters and exits
+                    the field of view.) The calibration value can be calculated from reference measurements.</p>
+
+                <figure>
+                    <div class="multi-img-figure">
+                        <img src="rect.png" alt="1">
+                        <img src="orig.png" alt="0">
+                    </div>
+                    <figcaption>
+                        <span>Figure 7:</span>
+                        <span>Length measurement using the smallest bounding rectangle.</span>
+                    </figcaption>
+                </figure>
+
+                <p>Lastly, two noise filtering techniques must be discussed. The experimental setup and the bubble
+                    location together could eliminate the majority of the environmental noises. However, in extreme
+                    cases such as when the experimental setup was bumped into or when the pieces of black paper were
+                    moved during recording, the contours of the disturbances could be retrieved throughout the duration
+                    of the disruption. To prevent measuring errors, these were filtered in two stages. The contours with
+                    an insignificant area were discarded before the bubble tracking. Afterwards, every tracked object
+                    was assigned a lifetime value, which is the metric of how many frames the object has been tracked
+                    for. By selecting an appropriate lifetime threshold for measuring the volume, the short lived (less
+                    than 10 sec) noises would disappear before mistakenly being assessed.</p>
+
+                <h3 id="Implementation">Implementation</h3>
+
+                <p>The program itself consisted of two main phases, the initialization and the processing. The
+                    initialization phase included the selection of the source video, then the setup of the
+                    reference image, reference distance and the region of interest (ROI). These were kept as
+                    manual tasks for code simplification. Afterwards, the program processes each frame by
+                    locating, tracking and measuring the bubbles. When finished with the video, the application
+                    saves the results and exits.</p>
+
+                <p>The program was implemented in C++ using OpenCV and Visual Studio on Windows. To facilitate the
+                    development, multiple quality of life features were added. This includes a graphical user
+                    interface (GUI) with video controls and data visualization, a terminal display showing the
+                    calibration data and processing times, the ability to record the results in video and text
+                    formats, and a tool for creating and visualizing simple computer vision pipelines at
+                    runtime. For increasing the performance, the graphical and terminal displays were managed by
+                    a separate process.</p>
+
+                <figure>
+                    <img src="vlcsnap-2017-10-27-01h17m43s900.png" alt="Recording snapshot">
+                    <figcaption>
+                        <span>Figure 8:</span>
+                        <span>
+                            Snapshot of the program in action.
+                            The status bar on the top shows the user the number of currently tracked objects,
+                            then the number of already measured objects alongside their total volume.
+                            On the right side, the frame counter shows the progression of the video.
+                            The green rectangle in the centre represents the region of interest (ROI).
+                            The green line on the ruler connects the two points selected
+                            for the reference length calculation.
+                            Objects are assigned a random colour upon their appearance which is kept
+                            until they disappear.
+                            This enables the manual verification of the object tracking.
+                            For each bubble, their volume in ul (or mm^3), their length in pixels,
+                            and their lifetime is printed alongside them.
+                        </span>
+                    </figcaption>
+                </figure>
+
+                <h2 id="Testing">Testing</h2>
+
+                <p>To assess the real-life usability of the application both its real-time processing capability
+                    and its volume measuring accuracy had to be evaluated.</p>
+
+                <h3 id="Real-time constraints">Real-time constraints</h3>
+
+                <p>The real-time processing capability was defined in our case as the ability to determine the
+                    volume of passing gas within the examined tube section with negligible delay. This
+                    constraint can be fulfilled by either processing each frame before the next one becomes
+                    available or by being able to skip over frames without affecting the final measurement
+                    result.</p>
+
+                <p>To assess the performance of the application, a test consisting of processing videos with
+                    the region of interest limited to the tube was conducted. According to the logged time
+                    results, each frame of the video could be processed within a maximum of 12 milliseconds,
+                    which is within the available 20 millisecond time frame provided by the 50 fps videos. The
+                    test was run on a Lenovo W520 laptop equipped with an Nvidia Quadro 1000M GPU, 16GB of DDR3
+                    RAM and an Intel i7-2670QM CPU.</p>
+
+                <figure>
+                    <img src="frame-processing-times-1.png" alt="Dummy image">
+                    <figcaption>
+                        <span>Figure 9:</span>
+                        <span>
+                            The frame processing times of a video.
+                            The segment at the end with shorter processing times corresponds to the
+                            section of the video when no new bubbles appear anymore.
+                        </span>
+                    </figcaption>
+                </figure>
+
+                <figure>
+                    <img src="frame-processing-times-2.png" alt="Dummy image">
+                    <figcaption>
+                        <span>Figure 10:</span>
+                        <span>
+                            The frame processing times of another video.
+                            The segment at the end with shorter processing times corresponds to the
+                            section of the video when no new bubbles appear anymore.
+                        </span>
+                    </figcaption>
+                </figure>
+
+                <p>In the tests afterwards, the robustness of the application was judged through its measuring
+                    precision when only every n-th frame is accessible. By carrying out the tests, it was found
+                    that processing only every n-th (n = 1 … 10) frame of the video had no significant effect on
+                    the measured volume. Thus the videos could be evaluated even with an effective refresh rate
+                    of 5 fps. (Note that the lifetime threshold for measuring the volume of a bubble had to be
+                    adjusted.) Bigger n-s were not tested.</p>
+
+                <h3 id="Accuracy">Accuracy</h3>
+
+                <p>To evaluate whether the application can be a substitute for the manual burette method, the
+                    measuring accuracy had to be determined for both. This included the consideration of what
+                    errors and to what degree affect the result, and whether they are systematic or random.</p>
+
+                <p>The reference values were measured with an A class burette, calibrated at 20 ˚C, with a
+                    capacity of 10 ml, division of 0.1 ml and tolerance of ±0.03 ml. Despite the Schellbach
+                    stripe, the reading uncertainty was estimated to be ±0.03 ml. By evening out the fluid
+                    levels of the burette and of the other container, the read volume values could be used
+                    directly without any conversions. Given that the circulated deionised water was stored in an
+                    open tank, it could be assumed to be fully saturated with air. The setup and the substances
+                    were stored at 23 ˚C in the same room. As this likely caused the same error in the reference
+                    and in the video measurements, it was disregarded for both. After taking everything into
+                    consideration, the uncertainty of the reference burette measurements was evaluated to be
+                    ±0.06 ml.</p>
+
+                <p>Regarding the video measurement, several factors of uncertainty were collected. For most of
+                    them, however, the magnitude of uncertainty was deemed to be negligible. The distortion of
+                    the used camera lens was reported to be maximum 0.1% [21], [22], [23], [24] and thus there
+                    was no need for the camera calibration. The uncertainty of the reference lengths was
+                    minimized through selecting the two furthest marks of the ruler as reference points. The
+                    thin film of water between the bubbles and the glass tube was reported to be in the order of
+                    4 μm for the equipment and materials used in the setup [15]. This value had an insignificant
+                    effect on the final volume measurements, and thus was discarded. For the same reason, the
+                    error of the glass tube diameter was also discarded. The uncertainty deriving from the
+                    pressure drop was also discarded, as neither the short tube section, the relatively low
+                    flow-rates, nor the horizontal tube placement would warrant pressures to significantly
+                    differ from atmospheric pressure. The parallax-error of the bubble border determination was
+                    deemed to be negligible. Based on evaluating the recordings, the lengths of the bubbles did
+                    not change significantly throughout their stay in view. Afterall, the primary source of
+                    uncertainty was deemed to originate from the - yet unaccounted - hemispherical ends of the
+                    bubbles.</p>
+
+                <p>To calibrate the length-based volume measuring technique, the final recordings were split into
+                    calibration and test groups. The bubble correction value for one video can be calculated
+                    from the uncalibrated measurement, the reference volume, and the number of bubbles. (With
+                    the used channel diameter, both ends of a bubble were round. Had the 2.8 mm tube been used,
+                    only the front would have been.) By doing so for each member of the calibration group, the
+                    average bubble correction value can be determined. This enables the calibration of every
+                    measurement and the evaluation of the errors. The results are summarized in Table 1.</p>
+
+                <figure>
+                    <img src="measuring-accuracy.png" alt="Measuring accuracy">
+                    <figcaption>
+                        <span>Figure 11:</span>
+                        <span>Measurement calibration.</span>
+                    </figcaption>
+                </figure>
+
+                <figure>
+                    <table class="bc-table">
+                        <thead>
+                            <tr style="text-align: right;">
+                                <th>Video ID</th>
+                                <th>Reference Volume [μl]</th>
+                                <th>Corrected Volume [μl]</th>
+                                <th>Error [μl]</th>
+                                <th>Relative Error</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>6000</td>
+                                <td>6154.402</td>
+                                <td>154.402</td>
+                                <td>2.573%</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>6100</td>
+                                <td>6052.297</td>
+                                <td>-47.703</td>
+                                <td>-0.782%</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>6000</td>
+                                <td>5954.590</td>
+                                <td>-45.410</td>
+                                <td>-0.757%</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>6300</td>
+                                <td>5905.444</td>
+                                <td>-394.556</td>
+                                <td>-6.263%</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>2000</td>
+                                <td>2002.695</td>
+                                <td>2.695</td>
+                                <td>0.135%</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>2050</td>
+                                <td>2067.821</td>
+                                <td>17.821</td>
+                                <td>0.869%</td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>2100</td>
+                                <td>2026.454</td>
+                                <td>-73.546</td>
+                                <td>-3.502%</td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>2100</td>
+                                <td>2012.134</td>
+                                <td>-87.866</td>
+                                <td>-4.184%</td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td>4000</td>
+                                <td>4008.826</td>
+                                <td>8.826</td>
+                                <td>0.221%</td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td>4200</td>
+                                <td>4068.099</td>
+                                <td>-131.901</td>
+                                <td>-3.141%</td>
+                            </tr>
+                            <tr>
+                                <td>11</td>
+                                <td>4170</td>
+                                <td>4095.729</td>
+                                <td>-74.271</td>
+                                <td>-1.781%</td>
+                            </tr>
+                            <tr>
+                                <td>12</td>
+                                <td>4350</td>
+                                <td>4152.796</td>
+                                <td>-197.204</td>
+                                <td>-4.533%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <figcaption>
+                        <span>Table 1:</span>
+                        <span>
+                            Measurement data summary.
+                            The videos with the IDs 1, 2, 5, 6, 9 and 10 belong to the calibration group.
+                            The rest belong to test group.
+                        </span>
+                    </figcaption>
+                </figure>
+
+                <p>Given the relatively low number of data points, the assessment of uncertainty is somewhat
+                    constrained. Certain techniques, such as calculating confidence intervals, identifying
+                    outlying data points, and fitting trend lines or curves, produce results that lack
+                    statistical significance and therefore are not applicable. Nevertheless, the results show
+                    that the accuracy of the video based volume measurement is at most an order of magnitude
+                    below that of the manual burette method.</p>
+
+
+                <h2 id="Conclusions">Conclusions</h2>
+
+                <p>In my paper I discuss the development of a computer vision based gas volume measuring
+                    application and of an experimental setup created for testing. The tool was designed for
+                    small-channel gas-liquid two-phase flow systems operating in the Taylor flow regime.</p>
+
+                <p>The application was developed in C++ using OpenCV. The bubbles were located through grayscale
+                    image differencing and their contours were enhanced with thresholding and morphology. The
+                    bubbles were tracked across consecutive frames using a spatial overlap based technique. The
+                    volume measurement assumed that a bubble can be approximated with a cylinder of equal length
+                    minus a correction value due to the hemispherical bubble ends.</p>
+
+                <p>To acquire this bubble correction value and to evaluate the measuring accuracy, the
+                    recordings were split into calibration and test groups. Using the members of the former, the
+                    average bubble correction value was determined. This enabled the calibration of the
+                    measurements and the calculation of the errors.</p>
+
+                <p> on the conducted tests, the application is able to robustly process the videos in real-time.
+                    Through evaluating the measurements it can be stated that the uncertainty of the volume
+                    measurement is at most one order of magnitude greater than that of the manual burette
+                    method. Nevertheless, further measurements would enable the determination of the accuracy
+                    with a greater certainty.</p>
+
+                <h2 id="Future work">Future work</h2>
+
+                <p>The presented application has the potential for further improvements and use cases. These are
+                    discussed in the following sections.</p>
+
+                <h3 id="Experimental setup variations">Experimental setup variations</h3>
+
+                <p> experimental setup circulated air and deionised water, and the recordings were taken of a
+                    circular glass tube with an inner diameter of 3.95 mm. The circulated substances were chosen
+                    due to their availability, non-toxicity and ease of handling, which enabled the conduction
+                    of experiments without any additional training or special equipment. The recordings were
+                    constrained to only one tube due to resource limitations.</p>
+
+                <p>Nevertheless, making changes to the setup would be essential to further assess the real-life
+                    usability of the application. The changes include the use of other gas-liquid substances
+                    common in flow systems, and the use of glass tubes with various inner diameters. Testing
+                    non-circular channels could also have a benefit.</p>
+
+                <h3 id="Improving the accuracy">Improving the accuracy</h3>
+
+                <p> uncertainty of the video-based volume measurement was estimated to be at most one order of
+                    magnitude higher than that of the manual burette method. However, this result could be
+                    improved.</p>
+
+                <p>First of all, increasing the number of measurements would enable the calculation of
+                    confidence intervals, the identification of outlying data points and the analysis of the
+                    error distribution. These would support the evaluation of the measurement uncertainty with a
+                    higher confidence.</p>
+
+                <p>Additionally, the measurement itself could also be improved. The experimental setup had the
+                    shortcomings of being only able to produce bubbles with homogenous lengths, and being able
+                    to measure only the total volume of the gas and not that of the individual bubbles. By
+                    injecting the air manually into the system with a syringe, it would be possible to create
+                    bubbles with the desired lengths or volumes. This, in turn, allows the evaluation of bubble
+                    attributes on a much wider scale, promoting the improvement of the volume measuring
+                    technique.</p>
+
+                <figure>
+                    <img src="manual-air-injection.png" alt="Manual air injection" class="small_figure">
+                    <figcaption>
+                        <span>Figure 12:</span>
+                        <span>Manual air injection with a syringe, enabling finer control of the bubble sizes.</span>
+                    </figcaption>
+                </figure>
+
+                <h3 id="Further Use-Cases">Further Use-Cases</h3>
+
+                <p> application measured the volume of the passing gas within the flow system. However, with
+                    minor modifications it could be adapted for additional purposes.</p>
+                <p>For starters, using a reference image taken of the recording section filled with air -
+                    instead of water - would enable the location of the liquid slugs. Ultimately, this can
+                    enable the volume of the passing liquid to be measured in a similar manner as it was
+                    presented for the gas.</p>
+                <p>More importantly, however, the location of the phase boundaries can facilitate the evaluation
+                    of multiple flow parameters. This includes the bubble and slug lengths, the bubble velocity,
+                    and the void fraction (the fraction of the flow domain occupied by the gas phase [14]). The
+                    real-time monitoring of such properties could further drive the automation of flow systems,
+                    enabling parameter sweeps in order to optimize processes and to better understand the
+                    characteristics of the small-channel Taylor flow.</p>
+
+                <h2 id="Rerefences">Rerefences</h2>
+
+                <div class="citation">
+                    <p class="c2"><span class="c5">[1]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;K. Pulli, A.
+                            Baksheev, K.
+                            Kornyakov, and V. Eruhimov, &ldquo;Real-time computer vision with OpenCV,&rdquo;
+                        </span><span class="c5 c6">Commun. ACM</span><span class="c5">, vol. 55, no. 6, pp. 61&ndash;69,
+                            Jun. 2012, doi:
+                            10.1145/2184319.2184337.</span></p>
+                    <p class="c2"><span class="c5">[2]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SICK,
+                            &ldquo;Vision Product
+                            catalog 2014/2015.&rdquo;</span></p>
+                    <p class="c2"><span class="c5">[3]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Halcon,
+                            &ldquo;Halcon product
+                            brochure.&rdquo;</span></p>
+                    <p class="c2"><span class="c5">[4]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;D. Wu and D.-W.
+                            Sun, &ldquo;Colour
+                            measurements by computer vision for food quality control &ndash; A review,&rdquo;
+                        </span><span class="c5 c6">Trends Food Sci. Technol.</span><span class="c5">, vol. 29, no. 1,
+                            pp. 5&ndash;20, Jan. 2013,
+                            doi: 10.1016/j.tifs.2012.08.004.</span></p>
+                    <p class="c2"><span class="c5">[5]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;B. Zhang
+                        </span><span class="c5 c6">et al.</span><span class="c5">, &ldquo;Principles, developments and
+                            applications of computer
+                            vision for external quality inspection of fruits and vegetables: A review,&rdquo;
+                        </span><span class="c5 c6">Food Res. Int.</span><span class="c5">, vol. 62, pp. 326&ndash;343,
+                            Aug. 2014, doi:
+                            10.1016/j.foodres.2014.03.012.</span></p>
+                    <p class="c2"><span class="c5">[6]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;M. O&rsquo;Brien,
+                            N. Taylor, A.
+                            Polyzos, I. R. Baxendale, and S. V. Ley, &ldquo;Hydrogenation in flow: Homogeneous and
+                            heterogeneous
+                            catalysis using Teflon AF-2400 to effect gas&ndash;liquid contact at elevated
+                            pressure,&rdquo; </span><span class="c5 c6">Chem. Sci.</span><span class="c5">, vol. 2, no.
+                            7, pp. 1250&ndash;1257, Jun. 2011, doi:
+                            10.1039/C1SC00055A.</span></p>
+                    <p class="c2"><span class="c5">[7]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;D. E. Fitzpatrick,
+                            C.
+                            Battilocchio, and S. V. Ley, &ldquo;A Novel Internet-Based Reaction Monitoring, Control and
+                            Autonomous
+                            Self-Optimization Platform for Chemical Synthesis,&rdquo; </span><span class="c5 c6">Org.
+                            Process Res.
+                            Dev.</span><span class="c5">, vol. 20, no. 2, pp. 386&ndash;394, Feb. 2016, doi:
+                            10.1021/acs.oprd.5b00313.</span></p>
+                    <p class="c2"><span class="c5">[8]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;H. Li, H. Ji, Z.
+                            Huang, B. Wang,
+                            H. Li, and G. Wu, &ldquo;A New Void Fraction Measurement Method for Gas-Liquid Two-Phase
+                            Flow in Small
+                            Channels,&rdquo; </span><span class="c5 c6">Sensors</span><span class="c5">, vol. 16, no. 2,
+                            Art. no. 2,
+                            Feb. 2016, doi: 10.3390/s16020159.</span></p>
+                    <p class="c2"><span class="c5">[9]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;C. T. Crowe,
+                        </span><span class="c5 c6">Multiphase Flow Handbook</span><span class="c5">. CRC Press,
+                            2005.</span></p>
+                    <p class="c2"><span class="c5">[10]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;S. Kandlikar, S.
+                            Garimella, D.
+                            Li, S. Colin, and M. R. King, </span><span class="c5 c6">Heat Transfer and Fluid Flow in
+                            Minichannels and
+                            Microchannels</span><span class="c5">. Elsevier, 2005.</span></p>
+                    <p class="c2"><span class="c5">[11]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;C. B.
+                            Tibiri&ccedil;&aacute; and
+                            G. Ribatski, &ldquo;Flow boiling in micro-scale channels &ndash; Synthesized literature
+                            review,&rdquo;
+                        </span><span class="c5 c6">Int. J. Refrig.</span><span class="c5">, vol. 36, no. 2, pp.
+                            301&ndash;324, Mar.
+                            2013, doi: 10.1016/j.ijrefrig.2012.11.019.</span></p>
+                    <p class="c2"><span class="c5">[12]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;H. Ji, H. Li, Z.
+                            Huang, B. Wang,
+                            and H. Li, &ldquo;Measurement of Gas-Liquid Two-Phase Flow in Micro-Pipes by a Capacitance
+                            Sensor,&rdquo;
+                        </span><span class="c5 c6">Sensors</span><span class="c5">, vol. 14, no. 12, Art. no. 12, Dec.
+                            2014, doi:
+                            10.3390/s141222431.</span></p>
+                    <p class="c2"><span class="c5">[13]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;P. Angeli and A.
+                            Gavriilidis,
+                            &ldquo;Hydrodynamics of Taylor flow in small channels: A Review,&rdquo; </span><span
+                            class="c5 c6">Proc.
+                            Inst. Mech. Eng. Part C J. Mech. Eng. Sci.</span><span class="c5">, vol. 222, no. 5, pp.
+                            737&ndash;751, May
+                            2008, doi: 10.1243/09544062JMES776.</span></p>
+                    <p class="c2"><span class="c5">[14]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R. Gupta, D. F.
+                            Fletcher, and B.
+                            S. Haynes, &ldquo;Taylor Flow in Microchannels: A Review of Experimental and Computational
+                            Work,&rdquo;
+                        </span><span class="c5 c6">J. Comput. Multiph. Flows</span><span class="c5">, vol. 2, no. 1, pp.
+                            1&ndash;31,
+                            Mar. 2010, doi: 10.1260/1757-482X.2.1.1.</span></p>
+                    <p class="c2"><span class="c5">[15]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Y. Han and N.
+                            Shikazono,
+                            &ldquo;Measurement of the liquid film thickness in micro tube slug flow,&rdquo; </span><span
+                            class="c5 c6">Int. J. Heat Fluid Flow</span><span class="c5">, vol. 30, no. 5, pp.
+                            842&ndash;853, Oct. 2009,
+                            doi: 10.1016/j.ijheatfluidflow.2009.02.019.</span></p>
+                    <p class="c2"><span class="c5">[16]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;M. O&rsquo;Brien,
+                            N. Taylor, A. Polyzos, I. R. Baxendale, and S. V. Ley,
+                            &ldquo;Hydrogenation in flow: Homogeneous and heterogeneous catalysis using Teflon AF-2400
+                            to effect gas&ndash;liquid contact at elevated pressure&ndash;Supporting Information,&rdquo;
+                            Accessed: Dec. 26, 2023. [Online]. Available:
+                            https://www.rsc.org/suppdata/sc/c1/c1sc00055a/c1sc00055a.pdf</span></p>
+                    <p class="c2"><span class="c5">[17]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R. Battino and H.
+                            L. Clever,
+                            &ldquo;The Solubility of Gases in Liquids,&rdquo; ACS Publications. Accessed: Nov. 11, 2023.
+                            [Online].
+                            Available: https://pubs.acs.org/doi/pdf/10.1021/cr60242a003</span></p>
+                    <p class="c2"><span class="c5">[18]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;D. C. Minh and M.
+                            Ruel,
+                            &ldquo;Total pressure method. Binary systems cyclohexane-1-pentanol, -1-heptanol, and
+                            -1-octanol,&rdquo; ACS
+                            Publications. Accessed: Nov. 11, 2023. [Online]. Available:
+                            https://pubs.acs.org/doi/pdf/10.1021/je60056a010</span></p>
+                    <p class="c2"><span class="c5">[19]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;L. H. Turner, Y.
+                            C. Chiew, R. C.
+                            Ahlert, and D. S. Kosson, &ldquo;Measuring vapor-liquid equilibrium for aqueous-organic
+                            systems: Review and
+                            a new technique,&rdquo; </span><span class="c5 c6">AIChE J.</span><span class="c5">, vol.
+                            42, no. 6, pp.
+                            1772&ndash;1788, 1996, doi: 10.1002/aic.690420629.</span></p>
+                    <p class="c2"><span class="c5">[20]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;J. Tan, J. Xu, K.
+                            Wang, and G.
+                            Luo, &ldquo;Rapid Measurement of Gas Solubility in Liquids Using a Membrane Dispersion
+                            Microcontactor,&rdquo; </span><span class="c5 c6">Ind. Eng. Chem. Res.</span><span
+                            class="c5">, vol. 49, no.
+                            20, pp. 10040&ndash;10045, Oct. 2010, doi: 10.1021/ie1011504.</span></p>
+                    <p class="c2"><span class="c5">[21]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;J. Silber,
+                            &ldquo;Lens Test:
+                            Canon 60mm f/2.8 Macro EF-S USM AF,&rdquo; Popular Photography. Accessed: Oct. 21, 2017.
+                            [Online].
+                            Available:
+                            https://www.popphoto.com/gear/2008/12/lens-test-canon-60mm-f28-macro-ef-s-usm-af/</span></p>
+                    <p class="c2"><span class="c5">[22]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A. Olech,
+                            &ldquo;Canon EF-S 60 mm
+                            f/2.8 Macro USM review - Distortion - LensTip.com.&rdquo; Accessed: Oct. 21, 2017. [Online].
+                            Available:
+                            https://www.lenstip.com/178.6-Lens_review-Canon_EF-S_60_mm_f_2.8_Macro_USM_Distortion.html</span>
+                    </p>
+                    <p class="c2"><span class="c5">[23]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;K. Schroiff,
+                            &ldquo;Canon EF-S
+                            60mm f/2.8 USM macro - Review / Test Report.&rdquo; Accessed: Oct. 21, 2017. [Online].
+                            Available:
+                            https://www.photozone.de/canon-eos/513-%20canon60f28apsc?start=</span></p>
+                    <p class="c2"><span class="c5">[24]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ldquo;Canon EF-S
+                            60mm f/2.8
+                            Macro USM Review.&rdquo; Accessed: Oct. 21, 2017. [Online]. Available:
+                            https://www.imaging-resource.com/lenses/canon/ef-s-60mm-f2.8-macro-usm/review/</span></p>
+                </div>
+
+            </article>
+        </div>
+    </main>
+
+    <div class="page-footer-container">
+        <footer class="page-footer container">
+
+            <div>
+                <span>Created by ThatSzucs.</span>
+                <span>Website aesthetics borrowed from the
+                    <a target="_blank" rel="noopener noreferrer" href="https://developer.mozilla.org/en-US/blog/">MDN
+                        Blog</a>.</span>
+            </div>
+
+        </footer>
+    </div>
+
+</body>
+
+</html>
