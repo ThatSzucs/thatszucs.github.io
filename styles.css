@@ -63,9 +63,14 @@ body {
     color: inherit;
 }
 
+.nav-link:focus,
 .nav-link:hover {
     text-decoration: none;
     color: var(--button-secondary-hover);
+}
+
+.nav-link:active {
+    color: var(--button-secondary-active);
 }
 
 /* Main page content */
@@ -122,6 +127,12 @@ body {
 .blog-container a:focus,
 .blog-container a:hover {
     text-decoration: underline;
+}
+
+.blog-container a:not(.button):active,
+.blog-container a:not(.button):active:visited {
+    background-color: var(--text-link);
+    color: #fff;
 }
 
 .article-image {
@@ -212,19 +223,14 @@ article .article-date {
     gap: 1rem;
 }
 
-.citation {
 
-    .c2 {
-        margin-top: 0;
-        margin-bottom: 0;
-        text-indent: 3rem hanging;
+.citation p {
+    margin-top: 0;
+    margin-bottom: .5rem;
+    line-height: var(--intermediate-line-height);
 
-        line-height: var(--intermediate-line-height);
-    }
-
-    .c6 {
-        font-style: italic
-    }
+    display: grid;
+    grid-template-columns: 4rem minmax(auto, 100%);
 }
 
 .button {
@@ -269,6 +275,10 @@ article .article-date {
 
 .button:hover .button-wrap {
     background-color: var(--button-bg-hover, var(--button-bg));
+}
+
+.button:active .button-wrap {
+    background-color: var(--button-bg-active, var(--button-bg));
 }
 
 /* Article page content */
@@ -324,6 +334,22 @@ article .article-date {
 
 .blog-post a {
     color: var(--text-link);
+    text-decoration: underline;
+}
+
+.blog-post a:visited {
+    color: var(--text-visited);
+}
+
+.blog-post a:focus,
+.blog-post a:hover {
+    text-decoration: none;
+}
+
+.blog-post a:not(.button):active,
+.blog-post a:not(.button):active:visited {
+    background-color: var(--text-link);
+    color: #fff;
 }
 
 .blog-post-container>.toc-container {
@@ -476,17 +502,13 @@ pre {
     font-size: var(--type-tiny-font-size);
 }
 
-.page-footer {
+.page-footer a {
+    color: var(--text-secondary);
+    text-decoration: underline;
+}
 
-    a {
-        text-decoration: underline;
-        color: var(--text-secondary);
-    }
-
-    a:hover {
-        text-decoration: none;
-    }
-
+.page-footer a:hover {
+    text-decoration: none;
 }
 
 :root {
