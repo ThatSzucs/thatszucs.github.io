@@ -166,16 +166,17 @@
                 <p>In the past decades, the study and industrial application of gas-liquid two-phase flow in
                     small-channel systems have become a significant area [8], [9], [10], [11], [12]. One of the dominant
                     flow regimes (flow patterns) in such systems is the Taylor flow [13], [14], [15], which consists of
-                    elongated bubbles separated by liquid slugs (liquid plugs). The hydrodynamic properties of the
-                    Taylor flow make it attractive for carrying out gas-liquid operations [13], resulting in its usage
-                    within various industrial processes [14]. For understanding the behavior and improving the
-                    performance of chemical systems that operate in this regime, knowing the flow characteristics is
-                    crucial [13]. This requires the measurement of the flow parameters [12], such as - but not limited
-                    to - phase velocity, bubble and slug lengths, and the void fraction [12], [13], [14]. However, the
-                    small-channel flow characteristics complicate the measurement of these compared to normal-scale
-                    channels, thus knowing which techniques to apply is critical [12]. The potential for automating the
-                    measurement of flow parameters of small-channel gas-liquid two-phase flow systems is illustrated
-                    through the example of a recently published chemical application [6].</p>
+                    elongated bubbles separated by liquid slugs (liquid plugs), as illustrated in Figure 1. The
+                    hydrodynamic properties of the Taylor flow make it attractive for carrying out gas-liquid operations
+                    [13], resulting in its usage within various industrial processes [14]. For understanding the
+                    behavior and improving the performance of chemical systems that operate in this regime, knowing the
+                    flow characteristics is crucial [13]. This requires the measurement of the flow parameters [12],
+                    such as - but not limited to - phase velocity, bubble and slug lengths, and the void fraction [12],
+                    [13], [14]. However, the small-channel flow characteristics complicate the measurement of these
+                    compared to normal-scale channels, thus knowing which techniques to apply is critical [12]. The
+                    potential for automating the measurement of flow parameters of small-channel gas-liquid two-phase
+                    flow systems is illustrated through the example of a recently published chemical application [6].
+                </p>
 
                 <figure>
                     <img src="taylor-flow.png" alt="Taylor flow" , class="small_figure">
@@ -190,7 +191,7 @@
                     flow within organic chemical synthesis. The device enables both the uptake of hydrogen into the
                     solution and the removal of it. The quantitative measurement of the gas permeation used the
                     traditional burette method at first, but was later simplified with a novel computer vision based
-                    "bubble counting" approach.</p>
+                    "bubble counting" approach. The setup is depicted in Figure 2.</p>
 
                 <figure>
                     <img src="outgassing-measuring-apparatus.png" alt="Outgassing measuring apparatus" ,
@@ -208,7 +209,7 @@
                     liquid could be distinguished by color. A section of tubing wrapped several times around a frame was
                     held in place in the view of a camera. Using a calibration photo and basic image processing,
                     approximating the concentration of hydrogen was reduced to counting the number of red and white
-                    pixels.</p>
+                    pixels, as seen in Figure 3.</p>
 
                 <figure>
                     <img src="bubble-counting-method.jpg" alt="Bubble counting method">
@@ -216,7 +217,7 @@
                         <span>Figure 3:</span>
                         <span>
                             The bubble counting method of [6].
-                            a: calibration run, reactor not pressurized.
+                            a: calibration run, reactor not pressurized, hydrogen not present in the system.
                             b: thresholding pixels to be either red or white.
                             c: photograph of outlet tubing from pressurized reactor.
                             d: thresholded image from pressurized reactor.
@@ -251,7 +252,7 @@
                     section to a burette. (The pumps and burette were regular lab equipment, their operation described
                     in detail within my paper.) The videos were captured in a resolution of 1280x720 pixels and 50
                     frames per second (fps) using a Canon EOS 70D camera equipped with Canon EF-S 60mm f/2.8 USM lens.
-                </p>
+                    The configuration is illustrated in Figure 4.</p>
 
                 <figure>
                     <img src="experimental-setup.png" alt="Experimental setup">
@@ -278,7 +279,7 @@
                     the phase boundaries. While analyzing some recordings, it was observed that as the bubbles are
                     passing along an object near the tube, its reflection appears in the border of the bubble. This
                     turned out to be a cornerstone of the application: the bubble-edges could be darkened and made
-                    easily visible.</p>
+                    easily visible. See Figure 5 for a snapshot of a recorded video.</p>
 
                 <figure>
                     <img src="vlcsnap-2017-11-11-15h43m39s445.png" alt="Recording snapshot">
@@ -297,7 +298,7 @@
                     reference image taken of the water-filled recording section, the bubble outlines could be located
                     with grayscale image differencing. To ensure having one contiguous contour per bubble, the
                     fragmented outlines could be united with image processing techniques such as thresholding and
-                    morphology.</p>
+                    morphology; this is demonstrated in Figure 6.</p>
 
                 <figure>
                     <div class="multi-img-figure">
@@ -313,11 +314,10 @@
                     <figcaption>
                         <span>Figure 6:</span>
                         <span>
-                            Retrieval of the bubble boundary for an extreme case.
-                            The steps include greyscale differencing, binary thresholding,
-                            dilating and hit-or-miss transformations with multiple kernels.
-                            The thinning operation at the end is just for representation,
-                            showing the unification of the bubble boundary.
+                            Retrieval of the bubble boundary for an extreme case. The steps include greyscale
+                            differencing, binary thresholding, dilating and hit-or-miss transformations with multiple
+                            kernels. The final thinning operation is merely shown to demonstrate the unification of the
+                            boundary, and is not used otherwise.
                         </span>
                     </figcaption>
                 </figure>
@@ -334,9 +334,9 @@
                     therefore, would be equal to the volume of a cylinder of equal height, minus a calibration value due
                     to the ends. The diameter of a bubble can be approximated with the diameter of the glass tube. The
                     length can be estimated with the width of the smallest enclosing rectangle when the entire bubble is
-                    visible. (The bubble is fully visible when there is sufficient distance between its border and the
-                    sections at which it enters and exits the field of view.) The calibration value can be calculated
-                    from reference measurements.</p>
+                    visible, as shown in Figure 7. (The bubble is fully visible when there is sufficient distance
+                    between its border and the sections at which it enters and exits the field of view.) The calibration
+                    value can be calculated from reference measurements.</p>
 
                 <figure>
                     <div class="multi-img-figure">
@@ -372,25 +372,22 @@
                     video controls and data visualization, a terminal display showing the calibration data and
                     processing times, the ability to record the results in video and text formats, and a tool for
                     creating and visualizing simple computer vision pipelines at runtime. To increase the performance,
-                    the graphical and terminal displays were managed by their own process.</p>
+                    the graphical and terminal displays were managed by their own process. See Figure 8 for a snapshot
+                    of the GUI.</p>
 
                 <figure>
                     <img src="vlcsnap-2017-10-27-01h17m43s900.png" alt="Recording snapshot">
                     <figcaption>
                         <span>Figure 8:</span>
                         <span>
-                            Snapshot of the program in action.
-                            The status bar on the top shows the user the number of currently tracked objects,
-                            then the number of already measured objects alongside their total volume.
-                            On the right side, the frame counter shows the progression of the video.
-                            The green rectangle in the centre represents the region of interest (ROI).
-                            The green line on the ruler connects the two points selected
-                            for the reference length calculation.
-                            Objects are assigned a random colour upon their appearance which is kept
-                            until they disappear.
-                            This enables the manual verification of the object tracking.
-                            For each bubble, their volume in μl (or mm^3), their length in pixels,
-                            and their lifetime is printed alongside them.
+                            Snapshot of the program in action. The status bar on the top shows the number of currently
+                            tracked objects, the number of already measured objects and the total measured volume. In
+                            the top-right corner, a frame counter shows the progress of the video. The green rectangle
+                            in the center represents the region of interest (ROI). The green line on the ruler connects
+                            the two points selected for the reference length calculation. Objects are assigned a random
+                            color upon their appearance, which is kept until they disappear; this enables the manual
+                            verification of the object tracking. For each bubble, their volume in μl (or mm^3), their
+                            length in pixels and their lifetime is printed alongside them.
                         </span>
                     </figcaption>
                 </figure>
@@ -410,8 +407,9 @@
                 <p>To assess the performance of the application, a test consisting of processing videos with the region
                     of interest limited to the tube was conducted. According to the logged time results, each frame of
                     the video could be processed within a maximum of 12 milliseconds, which is within the available 20
-                    millisecond time frame provided by the 50 fps videos. The test was run on a Lenovo W520 laptop
-                    equipped with an Nvidia Quadro 1000M GPU, 16GB of DDR3 RAM and an Intel i7-2670QM CPU.</p>
+                    millisecond time frame provided by the 50 fps videos. (For more details, see Figure 9 and Figure
+                    10.) The test was run on a Lenovo W520 laptop equipped with an Nvidia Quadro 1000M GPU, 16GB of DDR3
+                    RAM and an Intel i7-2670QM CPU.</p>
 
                 <figure>
                     <img src="frame-processing-times-1.png" alt="Dummy image">
@@ -481,7 +479,7 @@
                     diameter, both ends of a bubble were round; had the 2.8 mm tube been used, only the front would have
                     been.) By doing so for each member of the calibration group, the average bubble-correction value can
                     be determined. This enables the calibration of every measurement and the evaluation of the errors.
-                    The results are summarized in Table 1.</p>
+                    The results are summarized in Figure 11 and Table 1.</p>
 
                 <figure>
                     <img src="measuring-accuracy.png" alt="Measuring accuracy">
@@ -652,9 +650,9 @@
                 <p>Additionally, the measurement itself could also be improved. The experimental setup had the
                     shortcomings of being only able to produce bubbles with homogenous lengths and being able to measure
                     only the total volume of the gas and not that of the individual bubbles. By injecting the air
-                    manually into the system with a syringe, it would be possible to create bubbles with the desired
-                    lengths or volumes. This, in turn, allows the evaluation of bubble attributes on a much wider scale,
-                    promoting the improvement of the volume-measuring technique.</p>
+                    manually into the system with a syringe (as illustrated in Figure 12), it would be possible to
+                    create bubbles with the desired lengths or volumes. This, in turn, allows the evaluation of bubble
+                    attributes on a much wider scale, promoting the improvement of the volume-measuring technique.</p>
 
                 <figure>
                     <img src="manual-air-injection.png" alt="Manual air injection" class="small_figure">
