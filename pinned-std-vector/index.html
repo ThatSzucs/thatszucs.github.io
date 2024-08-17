@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Accelerating data transfer with CUDA devices using pinned memory: a preview | ThatSzucs' Project Spotlights</title>
+<link href="../styles.css" rel="stylesheet"/>
+<link href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;💡&lt;/text&gt;&lt;/svg&gt;" rel="icon"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="top-navigation-container">
+<header class="top-navigation container">
+<div class="top-navigation-title">
+<a class="title-logo" href="..">💡 ThatSzucs' Project Spotlights</a>
+</div>
+<div class="top-navigation-main">
+<div>
+<a class="nav-link" href="https://github.com/ThatSzucs/" target="_blank">
+<i class="fa fa-github"></i>
+                        Github
+                    </a>
+</div>
+</div>
+</header>
+</div>
+<main class="blog-post-container container">
+<div class="toc-container">
+<aside class="toc">
+<nav class="document-toc-container">
+<section class="document-toc">
+<header>
+<h2 class="document-toc-heading">In this post</h2>
+</header>
+<!-- This is where the TOC goes -->
+<ul>
+<li><a href="#incentive-for-performance">Incentive for
+performance</a></li>
+<li><a href="#pinned-memory">Pinned memory</a>
+<ul>
+<li><a href="#pinned-memory-with-pytorch">Pinned memory with
+PyTorch</a></li>
+<li><a href="#c-containers-in-pinned-memory">C++ containers in pinned
+memory</a></li>
+<li><a href="#pinned-c-arrays-as-pytorch-tensors">Pinned C++ arrays as
+PyTorch tensors</a></li>
+</ul></li>
+<li><a href="#conclusion">Conclusion</a></li>
+<li><a href="#references">References</a></li>
+<li><a href="#appendix">Appendix</a></li>
+</ul></section>
+</nav>
+</aside>
+</div>
+<div class="blog-post">
+<article>
+<!-- This is where the content goes -->
+<figure>
+<img src="cover.png"/>
+</figure><h1 id="accelerating-data-transfer-with-cuda-devices-using-pinned-memory-a-preview">Accelerating
+data transfer with CUDA devices using pinned memory: a preview</h1><div class="article-date">
+<p>2024.08.16.</p>
+<p>16 minute read</p>
+</div><p>Maximizing the performance of a program is not possible without
+considering the target hardware. After all, different sets of hardware
+require different solutions. When it comes to working with CUDA devices,
+pinned memory is an important optimization tool. If properly utilized,
+it can improve the bandwidth with the device, which is important in many
+areas including deep learning.</p><h2 id="incentive-for-performance">Incentive for performance</h2><p>“The purpose of all programs, and all parts of those programs, is to
+transform data from one form to another.”, said Mike Acton in his
+presentation at CppCon <span class="citation" data-cites="actonDataOrientedDesign2014"><a href="#ref-actonDataOrientedDesign2014" role="doc-biblioref">[1]</a></span>. Later he continued: “Software does
+not run in a magic fairy aether…”</p><p>Throughout his talk, the former VP of Unity3d and Engine Director at
+Insomniac Games stresses the importance of programmers understanding the
+data and the hardware that they work on, so they can understand the
+(data transformation) problem, and solve it appropriately. His points
+are demonstrated through examples. He shows the significance of data
+arrangement, and how it affects the utilization of the CPU cache <span class="citation" data-cites="meyersCpuCachesWhy2014"><a href="#ref-meyersCpuCachesWhy2014" role="doc-biblioref">[2]</a></span>,
+the memory bandwidth and the overall speed.</p><p>In the video game industry, performance is key <span class="citation" data-cites="actonDataOrientedDesign2014"><a href="#ref-actonDataOrientedDesign2014" role="doc-biblioref">[1]</a></span>. Creators can only add elements (be
+those mechanics or visuals) if there is enough space for them;
+otherwise, the time requirements of a frame would not be met and the
+user-experience would suffer. For console games, developers want to take
+full advantage of the limited hardware. For PC games, they want to lower
+the minimal requirements of the game to reach a big enough audience. Not
+surprising, therefore, that Mike Acton’s points are also advocated by
+other members of the industry <span class="citation" data-cites="ericsonLatencyElephant2009 llopisDataOrientedDesignWhy2009 diceIntroductionDataOriented2010"><a href="#ref-ericsonLatencyElephant2009" role="doc-biblioref">[3]</a>, <a href="#ref-llopisDataOrientedDesignWhy2009" role="doc-biblioref">[4]</a>, <a href="#ref-diceIntroductionDataOriented2010" role="doc-biblioref">[5]</a></span>.</p><p>Video games, however, are not the only area where performance is
+important. In embedded and mobile systems, resources are limited just as
+in game consoles. On the other end, performance can not be neglected
+even where computational capacity can be scaled, such as with deep
+(reinforcement) learning projects.</p><p>OpenAI Five <span class="citation" data-cites="openaiDotaLargeScale2019"><a href="#ref-openaiDotaLargeScale2019" role="doc-biblioref">[6]</a></span>
+was the first AI system to defeat the world champions at an esports
+game, Dota 2, in 2019. The rerun of it – which utilized the conclusions
+of the original ten-month-long run – used 1024 GPUs and 51200 CPUs over
+two months of training. (The numbers for the original version fluctuated
+between this scale and three-times larger.) At such a scale, the
+reduction of the running costs alone is enough of an incentive to
+maximize performance.</p><p>Programs can be accelerated in multiple ways: upgrading the hardware,
+using a more performant language, switching the data structures and
+fine-tuning the algorithms. Depending on the field of application, these
+topics are discussed online to various degrees. I feel, however, that
+one particular topic in the context of PyTorch, C++ and CUDA deserves
+more publicity: pinned host memory <span class="citation" data-cites="harrisHowOptimizeData2012 midkiffGPUTeachingKit faticaOptimization2014 CUDASemantics"><a href="#ref-harrisHowOptimizeData2012" role="doc-biblioref">[7]</a>, <a href="#ref-midkiffGPUTeachingKit" role="doc-biblioref">[8]</a>, <a href="#ref-faticaOptimization2014" role="doc-biblioref">[9]</a>, <a href="#ref-CUDASemantics" role="doc-biblioref">[10]</a></span>.</p><h2 id="pinned-memory">Pinned memory</h2><p>Modern computers use virtual memory (VM) <span class="citation" data-cites="VirtualMemory2024 midkiffGPUTeachingKit bhattacharjeeArchitecturalOperatingSystem2017 VirtualMemoryPages2016"><a href="#ref-midkiffGPUTeachingKit" role="doc-biblioref">[8]</a>, <a href="#ref-VirtualMemory2024" role="doc-biblioref">[11]</a>, <a href="#ref-bhattacharjeeArchitecturalOperatingSystem2017" role="doc-biblioref">[12]</a>, <a href="#ref-VirtualMemoryPages2016" role="doc-biblioref">[13]</a></span>. It is an abstraction that
+decouples user code from the storage resources available on a given
+machine. Programs access memory using virtual addresses; these are
+translated by the processor and the operating system (OS) into physical
+addresses, specifying where the data is actually physically located.
+(The many benefits of VM is discussed in <span class="citation" data-cites="bhattacharjeeArchitecturalOperatingSystem2017"><a href="#ref-bhattacharjeeArchitecturalOperatingSystem2017" role="doc-biblioref">[12]</a></span>.)</p><p>In most virtual memory subsystems, the virtual address space is
+divided into pages, contiguous regions of virtual memory managed as a
+single unit. Similarly, the physical address space is divided into page
+frames. As the pages are mapped to the page frames, they are equal in
+size.</p><p>Pages may not reside only in memory, but also on a secondary
+(backing) storage. This allows programs to exceed the size of available
+RAM. For certain uses, however, data must not be paged-out (swapped)
+from memory to such a storage. A good example is peripheral devices
+using direct memory access (DMA), such as GPUs. DMA enables devices to
+access main system memory independently of the CPU. If the data that is
+being read or written would be paged-out in the middle of the DMA
+transfer and another page would be paged-in to the same page frame, then
+the data would be corrupted. To prevent this, pages can be pinned, which
+marks them from being paged-out.</p><p>Host (CPU) data allocations are pageable by default. If a pageable
+host array is the source of a device data transfer, then the host
+operating system first allocates a temporary pinned host array as a
+staging area; afterwards, the host data is copied into this array, which
+is then read by the device. Similarly, if a pageable host array is the
+destination of a device data transfer, then a pinned array is allocated,
+the device transfers the data there, then the CPU copies that into the
+destination array. In both scenarios, the pinned buffer may be smaller
+than the total amount of data, in which case the transfer occurs in
+multiple stages.</p><p>By using pinned host memory directly as the source or destination,
+the extra overhead of the host-to-host copy could be avoided. This
+enables data to be read or written with much higher bandwidth. (Be wary
+though, that excessive use of pinned memory may degrade system
+performance.)</p><p>The degree of acceleration will depend on the actual hardware. A PC
+equipped with a Ryzen 5900x CPU, an Nvidia RTX 4080 GPU in a PCI Express
+x16 Gen4 slot and 2666 MHz DDR4 RAMs yields the following bandwidths in
+a CUDA benchmark:</p><pre><code>Device: NVIDIA GeForce RTX 4080
+Transfer size (MB): 16
+
+Pageable transfers
+  Host to Device bandwidth (GB/s): 17.115696
+  Device to Host bandwidth (GB/s): 10.471728
+
+Pinned transfers
+  Host to Device bandwidth (GB/s): 26.002480
+  Device to Host bandwidth (GB/s): 26.780814</code></pre><p>Here I would like to note, that page-locked memory (locked pages) and
+pinned memory (pinned pages) may not be interchangeable as the sources
+<span class="citation" data-cites="harrisHowOptimizeData2012 midkiffGPUTeachingKit faticaOptimization2014"><a href="#ref-harrisHowOptimizeData2012" role="doc-biblioref">[7]</a>, <a href="#ref-midkiffGPUTeachingKit" role="doc-biblioref">[8]</a>, <a href="#ref-faticaOptimization2014" role="doc-biblioref">[9]</a></span>
+and <span class="citation" data-cites="CUDASemantics"><a href="#ref-CUDASemantics" role="doc-biblioref">[10]</a></span> lead to
+believe. According to <span class="citation" data-cites="corbetLockingPinning2014"><a href="#ref-corbetLockingPinning2014" role="doc-biblioref">[14]</a></span>, although neither can be paged-out,
+a locked page can be moved within the RAM, while a pinned page must
+remain in the same physical location. DMA transfers require the latter;
+thus I only use the phrase pinned.</p><h3 id="pinned-memory-with-pytorch">Pinned memory with PyTorch</h3><p>PyTorch is an optimized tensor library for deep learning using GPUs
+and CPUs. Its documentation briefly discusses memory pinning as a
+technique that enables faster and asynchronous copies from the host to
+the GPU <span class="citation" data-cites="migaczPerformanceTuningGuide CUDASemantics TorchUtilsData"><a href="#ref-CUDASemantics" role="doc-biblioref">[10]</a>, <a href="#ref-migaczPerformanceTuningGuide" role="doc-biblioref">[15]</a>,
+<a href="#ref-TorchUtilsData" role="doc-biblioref">[16]</a></span>. The
+underlying reasons, however, are not mentioned; neither is the
+possibility to use it with device-to-host transfers.</p><p>In PyTorch, memory pinning is used in two cases: tensors and
+data-loaders (<code>DataLoader</code> objects). Tensors can be
+initialized in pinned memory by passing <code>pin_memory=True</code>,
+and can be copied into it by calling <code>.pin_memory()</code>.
+Data-loaders, objects that iterate through datasets and yield batches of
+data, can be instructed to place the batches into pinned memory by
+passing <code>pin_memory=True</code>.</p><p>To transfer tensors, PyTorch provides several options. Some of these
+also offer the possibility of changing the destination data type.</p><p>The <code>.cpu()</code>, <code>.cuda()</code>,
+<code>.to(dtype)</code>, <code>.to(device, dtype)</code> and
+<code>.to(other)</code> functions return a copy of the caller. They
+differ primarily on how the device and the type of the destination
+tensor is determined; in the same circumstances, they perform equally –
+based on my measurements. As a result, the Python benchmarks presented
+in this post only use <code>.to(device, dtype)</code>.</p><p>The <code>.copy_(src)</code> function copies the elements of the
+source tensor into the caller. Compared to the previous ones, this
+function provides more control over the destination. As far as I know –
+this is the only way to utilize pinned memory in device-to-host
+transfers using a PyTorch function.</p><p>Measuring the performance of the tensor transfers between the host
+and the device yields these results:</p><pre><code>Data size: 16.0 MB
+Iterations: 10001
+Abbreviations: d-device, h-host, p-pinned
+
+tensor.to(device, dtype)
+    h to d                985.15 us     15.9 GB/s
+    hp to d               662.33 us     23.6 GB/s
+    d to h               7256.03 us      2.2 GB/s
+
+tensor.copy_(src)
+    h to d                981.33 us     15.9 GB/s
+    hp to d               645.16 us     24.2 GB/s
+    d to h               1588.58 us      9.8 GB/s
+    d to hp               625.61 us     25.0 GB/s</code></pre><p>Similarly to the earlier CUDA benchmark, the pinned transfers clearly
+outperform the pageable ones. Interestingly though, the
+<code>.to(device, dtype)</code> function in the device-to-host transfer
+is much slower than expected: ~2 GB/s instead of ~10 GB/s. This raises
+some questions and makes the <code>.copy_(src)</code> even more
+appealing in this transfer direction.</p><h3 id="c-containers-in-pinned-memory">C++ containers in pinned
+memory</h3><p>C++ is commonly used in areas that require high performance. It is no
+surprise therefore, why developers would want to utilize pinned memory
+with it when data-transfer between the host and the device is
+involved.</p><p>As far as I know – the C++ standard library does not offer a way to
+pin memory. In CUDA C/C++, on the other hand, pinned memory can be
+allocated using <code>cudaMallocHost()</code> or
+<code>cudaHostAlloc()</code>, and deallocated with
+<code>cudaFreeHost()</code> <span class="citation" data-cites="harrisHowOptimizeData2012"><a href="#ref-harrisHowOptimizeData2012" role="doc-biblioref">[7]</a></span>. Using these, a custom C++ allocator
+would enable (many of) the standard library containers to be created
+within pinned memory, combining their convenience with the improved
+performance.</p><p>Using the allocator implementation of <span class="citation" data-cites="daveySimplifyingCUDAMemory2020"><a href="#ref-daveySimplifyingCUDAMemory2020" role="doc-biblioref">[17]</a></span> as base, the pinned allocator would
+look as:</p><div class="sourceCode" id="cb3"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="pp">#include </span><span class="im">"cuda_runtime.h"</span><span class="pp"> </span><span class="co">// "cuda_runtime_api.h" is C header</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdexcept&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">/* The allocator class */</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="kw">class</span> pinned_alloc <span class="op">{</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="kw">public</span><span class="op">:</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>    <span class="kw">using</span> <span class="dt">value_type</span> <span class="op">=</span> T<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>    <span class="kw">using</span> pointer <span class="op">=</span> <span class="dt">value_type</span> <span class="op">*;</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>    <span class="kw">using</span> <span class="dt">size_type</span> <span class="op">=</span> <span class="bu">std::</span>size_t<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>    pinned_alloc<span class="op">()</span> <span class="kw">noexcept</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>    <span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> U<span class="op">&gt;</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>    pinned_alloc<span class="op">(</span>pinned_alloc<span class="op">&lt;</span>U<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;)</span> <span class="kw">noexcept</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>    <span class="kw">auto</span> allocate<span class="op">(</span><span class="dt">size_type</span> n<span class="op">,</span> <span class="at">const</span> <span class="dt">void</span> <span class="op">*</span> <span class="op">=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="dt">value_type</span> <span class="op">*</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>        <span class="dt">value_type</span> <span class="op">*</span>tmp<span class="op">;</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>        <span class="kw">auto</span> error <span class="op">=</span> cudaMallocHost<span class="op">((</span><span class="dt">void</span> <span class="op">**)&amp;</span>tmp<span class="op">,</span> n <span class="op">*</span> <span class="kw">sizeof</span><span class="op">(</span>T<span class="op">));</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>error <span class="op">!=</span> cudaSuccess<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>            <span class="cf">throw</span> <span class="bu">std::</span>runtime_error<span class="op">{</span>cudaGetErrorString<span class="op">(</span>error<span class="op">)};</span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>        <span class="cf">return</span> tmp<span class="op">;</span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a>    <span class="kw">auto</span> deallocate<span class="op">(</span>pointer p<span class="op">,</span> <span class="dt">size_type</span> n<span class="op">)</span> <span class="op">-&gt;</span> <span class="dt">void</span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>p<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a>            <span class="kw">auto</span> error <span class="op">=</span> cudaFreeHost<span class="op">(</span>p<span class="op">);</span></span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>error <span class="op">!=</span> cudaSuccess<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a>                <span class="cf">throw</span> <span class="bu">std::</span>runtime_error<span class="op">{</span>cudaGetErrorString<span class="op">(</span>error<span class="op">)};</span></span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">class</span> T<span class="op">,</span> <span class="kw">class</span> U<span class="op">&gt;</span></span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="kw">auto</span> <span class="kw">operator</span><span class="op">==(</span>pinned_alloc<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;,</span> pinned_alloc<span class="op">&lt;</span>U<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;)</span> <span class="op">-&gt;</span> <span class="dt">bool</span></span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a></span>
+<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">class</span> T<span class="op">,</span> <span class="kw">class</span> U<span class="op">&gt;</span></span>
+<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a><span class="kw">auto</span> <span class="kw">operator</span><span class="op">!=(</span>pinned_alloc<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;,</span> pinned_alloc<span class="op">&lt;</span>U<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;)</span> <span class="op">-&gt;</span> <span class="dt">bool</span></span>
+<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><p>Using the allocator, creating a <code>std::vector</code> in pinned
+memory is simple enough:</p><div class="sourceCode" id="cb4"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="kw">auto</span> my_vec <span class="op">=</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>T<span class="op">,</span> pinned_alloc<span class="op">&lt;</span>T<span class="op">&gt;&gt;;</span>  <span class="co">// replace T with desired type</span></span></code></pre></div><p>With an alias template <span class="citation" data-cites="daveySimplifyingCUDAMemory2020"><a href="#ref-daveySimplifyingCUDAMemory2020" role="doc-biblioref">[17]</a></span>, the repetition of specifying the
+allocator could be omitted:</p><div class="sourceCode" id="cb5"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co">// Alias template</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="kw">using</span> pinned_vector <span class="op">=</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>T<span class="op">,</span> pinned_alloc<span class="op">&lt;</span>T<span class="op">&gt;&gt;;</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="kw">auto</span> my_vec <span class="op">=</span> pinned_vector<span class="op">&lt;</span>T<span class="op">&gt;;</span>  <span class="co">// replace T with desired type</span></span></code></pre></div><p>For more information on allocators and for a good read, see <span class="citation" data-cites="daveySimplifyingCUDAMemory2020"><a href="#ref-daveySimplifyingCUDAMemory2020" role="doc-biblioref">[17]</a></span>.</p><h3 id="pinned-c-arrays-as-pytorch-tensors">Pinned C++ arrays as PyTorch
+tensors</h3><p>To improve runtime, Python programs often have their
+performance-critical parts written in fast languages, such as C++. In
+such scenarios, the underlying data structures usually need to be
+accessed through Python as well. When it comes to simple arrays,
+exposing the data through a NumPy <code>ndarray</code> is a reasonable
+and convenient solution.</p><p>NumPy <span class="citation" data-cites="WhatNumPya WhatNumPy NumPy"><a href="#ref-WhatNumPya" role="doc-biblioref">[18]</a>, <a href="#ref-WhatNumPy" role="doc-biblioref">[19]</a>, <a href="#ref-NumPy" role="doc-biblioref">[20]</a></span> is a fundamental library for
+scientific computing in Python. It provides a multidimensional array
+object called <code>ndarray</code>, and utilizes optimized pre-compiled
+C code for operating on large numbers of data in a rapid fashion. NumPy
+arrays are used in several popular Python libraries such as Pandas,
+Scikit-learn and SciPy. OpenCV, an open-source computer-vision library
+written in C++, uses it for representing its n-dimensional dense array
+class <code>cv::Mat</code> in its Python bindings <span class="citation" data-cites="IntroductionOpenCVPythonTutorials"><a href="#ref-IntroductionOpenCVPythonTutorials" role="doc-biblioref">[21]</a></span>.</p><p>In PyTorch, NumPy arrays can be used for creating tensors with the
+<code>torch.from_numpy()</code> function (if the data type is
+supported). A tensor created this way shares memory with the
+<code>ndarray</code>. This is beneficial for two reasons. Firstly, the
+performance is increased if the data is not copied. Secondly, it
+provides a simple approach for creating a tensor that shares memory with
+a C++ container: just use the NumPy array of the container to create the
+<code>Tensor</code>. As an implication, when the data is in pinned
+memory, so is the tensor.</p><p>NumPy offers multiple approaches to treating a foreign object as a
+<code>ndarray</code>. These are described in <span class="citation" data-cites="InteroperabilityNumPy"><a href="#ref-InteroperabilityNumPy" role="doc-biblioref">[22]</a></span>. With Pybind11, a header-only
+library for binding C++ code to Python, exposing our pinned
+<code>std::vector</code> as a NumPy array would look as:</p><div class="sourceCode" id="cb6"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co">// include the pinned vector implementation</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;pybind11/numpy.h&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;pybind11/pybind11.h&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="kw">namespace</span> py <span class="op">=</span> pybind11<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">/// Pinned vector</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>py<span class="op">::</span><span class="dt">array_t</span><span class="op">&lt;</span>T<span class="op">&gt;</span> as_numpy<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>T<span class="op">,</span> pinned_alloc<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> <span class="op">&amp;</span>myvec<span class="op">)</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>    <span class="cf">return</span> py<span class="op">::</span><span class="dt">array_t</span><span class="op">&lt;</span>T<span class="op">&gt;({</span>myvec<span class="op">.</span>size<span class="op">()},</span> <span class="co">// Shape</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>                          <span class="op">{</span><span class="kw">sizeof</span><span class="op">(</span>T<span class="op">)},</span>    <span class="co">// Stride</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>                          myvec<span class="op">.</span>data<span class="op">(),</span>   <span class="co">// Data pointer</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>                          py<span class="op">::</span>none<span class="op">());</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><p>Here, the <code>ndarray</code> shares memory with the
+<code>std::vector</code>. As the memory is not managed by Python, the
+user is responsible for managing the lifetime of the vector; using the
+Numpy array after the C++ object is deleted will result in errors.</p><p>By binding both the regular pageable and the pinned
+<code>std::vector</code> variants to Python, the transfer rates of the
+vector-turned-tensors and the regular tensors can be compared:</p><pre><code>Data size: 16.0 MB
+Iterations: 10001
+Abbreviations: d-device, h-host, p-pinned, v-vector
+
+--- tensor ---
+
+tensor.to(device, dtype)
+    h to d                979.66 us     15.9 GB/s
+    hp to d               669.72 us     23.3 GB/s
+    d to h               7148.27 us      2.2 GB/s
+
+tensor.copy_(src)
+    h to d                976.80 us     16.0 GB/s
+    hp to d               645.16 us     24.2 GB/s
+    d to h               1583.10 us      9.9 GB/s
+    d to hp               625.61 us     25.0 GB/s
+
+--- vector ---
+
+tensor.to(device, dtype)
+    v to d                979.66 us     15.9 GB/s
+    vp to d               652.31 us     24.0 GB/s
+
+tensor.copy_(src)
+    v to d                975.85 us     16.0 GB/s
+    vp to d               645.16 us     24.2 GB/s
+    d to v               1539.23 us     10.2 GB/s
+    d to vp               625.61 us     25.0 GB/s
+
+cast
+    v as ndarray            0.24 us 
+    v as tensor             1.19 us 
+    vp as ndarray           0.24 us 
+    vp as tensor            1.19 us</code></pre><p>The results reveal three key points. First of all, creating a NumPy
+array or PyTorch tensor from a bound vector is fast with the zero-copy
+approaches. Secondly, a tensor that shares memory with a bound array
+automatically receives the same benefits from being in pinned memory as
+a regular tensor does; no need for additional tinkering. Lastly, a
+vector-turned-tensor and a regular PyTorch tensor perform equally under
+the same conditions.</p><h2 id="conclusion">Conclusion</h2><p>Certain areas have a strong incentive for maximizing the performance
+of programs. To do so, it is crucial to understand the data and the
+hardware that is worked on. When it comes to working with PyTorch, C++
+and CUDA devices, utilizing pinned memory is an important optimization
+step that I feel is worth more publicity.</p><p>Modern computers use virtual memory. It is an abstraction that
+decouples programs from the storage resources of a given machine.
+Alongside the RAM, computers can also make use of a secondary storage
+(disks, SSDs), which enables them to exceed the size of available
+memory. For certain uses, however, data must remain (at the same
+location) within the RAM. Devices using direct memory access (DMA) –
+such as GPUs – are prime examples. To achieve this, memory segments can
+be pinned.</p><p>Unlike regular pageable memory, pinned memory can be directly
+accessed by the device (GPU). This allows data to be read or written
+with much higher bandwidth. In a custom PyTorch benchmark, switching to
+pinned host memory increased the host-to-device transfer rate from 16
+GB/s to 24 GB/s; in the device-to-host direction, from 10 GB/s to 25
+GB/s. In addition to this speedup, switching also enables the GPU to
+move data asynchronously with respect to the CPU, which frees the latter
+to do other tasks.</p><p>Python programs often utilize C++ code to increase their performance.
+When doing so in PyTorch projects, creating a tensor that shares memory
+with a bound array can be beneficial: it grants PyTorch functions direct
+access to the data, which simplifies integrating custom code into the
+project. Based on the measurements, a tensor created this way receives
+the same benefits from being in pinned memory as a regular tensor does.
+Furthermore, they perform equally under the same conditions.</p><p>All in all, pinning memory is an important tool for improving the
+performance of projects that rely on CUDA GPUs. It enables increased
+bandwidth between the host and the device, can free the CPU for other
+tasks in the duration of the data transfer and can be used in tandem
+with leveraging C++ code in Python. The degree of acceleration,
+nonetheless, will depend on the actual data and hardware.</p><p>The presented results were acquired using a PC equipped with a Ryzen
+5900x CPU, an Nvidia RTX 4080 GPU in a PCI Express x16 Gen4 slot and
+2666 MHz DDR4 RAMs. The benchmarks are available on <a href="https://github.com/ThatSzucs/pinned-std-vector" target="_blank">GitHub<i aria_hidden="true" class="fa fa-external-link"></i></a>.</p><h2 id="references">References</h2><div class="references csl-bib-body" data-entry-spacing="0" id="refs" role="list">
+<div class="csl-entry" id="ref-actonDataOrientedDesign2014" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">M.
+Acton, <span>“Data-Oriented Design and C++,”</span> 2014. Accessed: Jul.
+08, 2024. [Online]. Available: <a href="https://www.youtube.com/watch?v=rX0ItVEVjHc" target="_blank">https://www.youtube.com/watch?v=rX0ItVEVjHc<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-meyersCpuCachesWhy2014" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">S.
+Meyers, <span>“Cpu Caches and Why You Care,”</span> NOKIA Technology
+Center Wrocław, 2014. Accessed: Jul. 08, 2024. [Online]. Available: <a href="https://www.youtube.com/watch?v=WDIkqP4JbkE" target="_blank">https://www.youtube.com/watch?v=WDIkqP4JbkE<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-ericsonLatencyElephant2009" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">C.
+Ericson, <span>“The Latency Elephant.”</span> Seven Degrees Of Freedom.
+Accessed: Jul. 09, 2024. [Online]. Available: <a href="http://seven-degrees-of-freedom.blogspot.com/2009/10/latency-elephant.html" target="_blank">http://seven-degrees-of-freedom.blogspot.com/2009/10/latency-elephant.html<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-llopisDataOrientedDesignWhy2009" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">N.
+Llopis, <span>“Data-Oriented Design (Or Why You Might Be Shooting
+Yourself in The Foot With OOP),”</span> Games from Within. Accessed:
+Jul. 09, 2024. [Online]. Available: <a href="https://gamesfromwithin.com/data-oriented-design" target="_blank">https://gamesfromwithin.com/data-oriented-design<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-diceIntroductionDataOriented2010" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">DICE, <span>“Introduction to Data Oriented
+Design,”</span> Electronic Arts Inc. - Frostbite. Accessed: Jul. 09,
+2024. [Online]. Available: <a href="https://www.ea.com/frostbite/news/introduction-to-data-oriented-design" target="_blank">https://www.ea.com/frostbite/news/introduction-to-data-oriented-design<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-openaiDotaLargeScale2019" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">OpenAI <em>et al.</em>, <span>“Dota 2 with
+Large Scale Deep Reinforcement Learning,”</span> Dec. 13, 2019,
+<em>arXiv</em>: arXiv:1912.06680. Accessed: Jul. 10, 2024. [Online].
+Available: <a href="http://arxiv.org/abs/1912.06680" target="_blank">http://arxiv.org/abs/1912.06680<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-harrisHowOptimizeData2012" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">M.
+Harris, <span>“How to Optimize Data Transfers in CUDA C/C++,”</span>
+NVIDIA Technical Blog. Accessed: Jul. 08, 2024. [Online]. Available: <a href="https://developer.nvidia.com/blog/how-optimize-data-transfers-cuda-cc/" target="_blank">https://developer.nvidia.com/blog/how-optimize-data-transfers-cuda-cc/<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-midkiffGPUTeachingKit" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">S.
+Midkiff, <span>“GPU Teaching Kit Module 14: Efficient Host-Device Data
+Transfer,”</span> Accessed: Jul. 14, 2024. [Online]. Available: <a href="https://engineering.purdue.edu/~smidkiff/ece563/NVidiaGPUTeachingToolkit/Mod14DataXfer/Mod14DataXfer.pdf" target="_blank">https://engineering.purdue.edu/~smidkiff/ece563/NVidiaGPUTeachingToolkit/Mod14DataXfer/Mod14DataXfer.pdf<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-faticaOptimization2014" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">M.
+Fatica and G. Ruetsch, <span>“Optimization,”</span> in <em>CUDA Fortran
+for Scientists and Engineers</em>, Elsevier, 2014, pp. 43–114. doi: <a href="https://doi.org/10.1016/B978-0-12-416970-8.00003-1" target="_blank">10.1016/B978-0-12-416970-8.00003-1<i aria_hidden="true" class="fa fa-external-link"></i></a>.</div>
+</div>
+<div class="csl-entry" id="ref-CUDASemantics" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline"><span>“CUDA semantics,”</span> PyTorch 2.3
+documentation. Accessed: Jul. 15, 2024. [Online]. Available: <a href="https://pytorch.org/docs/stable/notes/cuda.html#cuda-memory-pinning" target="_blank">https://pytorch.org/docs/stable/notes/cuda.html#cuda-memory-pinning<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-VirtualMemory2024" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline"><span>“Virtual memory,”</span>
+<em>Wikipedia</em>. Jan. 17, 2024. Accessed: Jul. 14, 2024. [Online].
+Available: <a href="https://en.wikipedia.org/w/index.php?title=Virtual_memory&amp;oldid=1196272296" target="_blank">https://en.wikipedia.org/w/index.php?title=Virtual_memory&amp;oldid=1196272296<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-bhattacharjeeArchitecturalOperatingSystem2017" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">A.
+Bhattacharjee and D. Lustig, <em>Architectural and Operating System
+Support for Virtual Memory</em>. Morgan &amp; Claypool Publishers,
+2017.</div>
+</div>
+<div class="csl-entry" id="ref-VirtualMemoryPages2016" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline"><span>“Virtual Memory: pages and page
+frames,”</span> The Monkey Trials. Accessed: Aug. 10, 2024. [Online].
+Available: <a href="https://web.archive.org/web/20160611231342/http://blog.cs.miami.edu/burt/2012/10/31/virtual-memory-pages-and-page-frames/" target="_blank">https://web.archive.org/web/20160611231342/http://blog.cs.miami.edu/burt/2012/10/31/virtual-memory-pages-and-page-frames/<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-corbetLockingPinning2014" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">J.
+Corbet, <span>“Locking and pinning,”</span> LWN.net. Accessed: Jul. 18,
+2024. [Online]. Available: <a href="https://lwn.net/Articles/600502/" target="_blank">https://lwn.net/Articles/600502/<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-migaczPerformanceTuningGuide" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">S.
+Migacz, <span>“Performance Tuning Guide,”</span> PyTorch Tutorials.
+Accessed: Jul. 15, 2024. [Online]. Available: <a href="https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html#enable-async-data-loading-and-augmentation" target="_blank">https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html#enable-async-data-loading-and-augmentation<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-TorchUtilsData" role="listitem">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline"><span>“torch.utils.data,”</span> PyTorch 2.3
+documentation. Accessed: Jul. 15, 2024. [Online]. Available: <a href="https://pytorch.org/docs/stable/data.html#memory-pinning" target="_blank">https://pytorch.org/docs/stable/data.html#memory-pinning<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-daveySimplifyingCUDAMemory2020" role="listitem">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">G.
+Davey, <span>“Simplifying CUDA Memory Management,”</span> CommitThis!
+blog. Accessed: Jul. 08, 2024. [Online]. Available: <a href="https://committhis.github.io/2020/10/06/cuda-abstractions.html" target="_blank">https://committhis.github.io/2020/10/06/cuda-abstractions.html<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-WhatNumPya" role="listitem">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline"><span>“What is NumPy?”</span> NumPy
+documentation. Accessed: Jul. 29, 2024. [Online]. Available: <a href="https://numpy.org/doc/stable/user/whatisnumpy.html" target="_blank">https://numpy.org/doc/stable/user/whatisnumpy.html<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-WhatNumPy" role="listitem">
+<div class="csl-left-margin">[19] </div><div class="csl-right-inline"><span>“What is NumPy?”</span> NVIDIA Data
+Science Glossary. Accessed: Jul. 29, 2024. [Online]. Available: <a href="https://www.nvidia.com/en-us/glossary/numpy/" target="_blank">https://www.nvidia.com/en-us/glossary/numpy/<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-NumPy" role="listitem">
+<div class="csl-left-margin">[20] </div><div class="csl-right-inline"><span>“NumPy,”</span> Pybind11 documentation.
+Accessed: Jul. 22, 2024. [Online]. Available: <a href="https://pybind11.readthedocs.io/en/stable/advanced/pycpp/numpy.html#buffer-protocol" target="_blank">https://pybind11.readthedocs.io/en/stable/advanced/pycpp/numpy.html#buffer-protocol<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-IntroductionOpenCVPythonTutorials" role="listitem">
+<div class="csl-left-margin">[21] </div><div class="csl-right-inline"><span>“Introduction to OpenCV-Python
+Tutorials,”</span> OpenCV documentation. Accessed: Jul. 23, 2024.
+[Online]. Available: <a href="https://docs.opencv.org/3.4/d0/de3/tutorial_py_intro.html" target="_blank">https://docs.opencv.org/3.4/d0/de3/tutorial_py_intro.html<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+<div class="csl-entry" id="ref-InteroperabilityNumPy" role="listitem">
+<div class="csl-left-margin">[22] </div><div class="csl-right-inline"><span>“Interoperability with NumPy,”</span>
+NumPy documentation. Accessed: Aug. 06, 2024. [Online]. Available: <a href="https://numpy.org/doc/stable/user/basics.interoperability.html" target="_blank">https://numpy.org/doc/stable/user/basics.interoperability.html<i aria_hidden="true" class="fa fa-external-link"></i></a></div>
+</div>
+</div><h2 id="appendix">Appendix</h2><p>The primary goal of this post was to raise awareness of pinned
+memory; it is by no means an in-depth guide. This is reflected by the
+microbenchmarks: they just print the median execution time for a single
+data size without further analysis. Yet, the performance of moving data
+from the device to the host with <code>.to(device, dtype)</code> is
+worth a second look.</p><p>The tests measured this transfer to be the slowest, reaching a rate
+of only 2 GB/s. For comparison, <code>.copy_(src)</code> reached 10 GB/s
+with pageable and 25 GB/s with pinned host memory. I started
+investigating.</p><p>I checked if the function is not aimed for device-to-host transfer,
+but <code>.cpu()</code> performed equally. I tested if the slowness is
+caused by the repeated allocation of the destination container; however,
+creating the destination tensor myself and calling
+<code>.copy_(src)</code> with it reached 6 GB/s with pageable and 14
+GB/s with pinned memory. See:</p><pre><code>Data size: 16.0 MB
+Iterations: 5001
+Abbreviations: d-device, h-host, p-pinned
+
+tensor.to(device, dtype)
+    h to d                980.14 us     15.9 GB/s
+    hp to d               648.50 us     24.1 GB/s
+    d to h               7480.86 us      2.1 GB/s
+
+tensor.copy_(src)
+    h to d                972.99 us     16.1 GB/s
+    hp to d               645.40 us     24.2 GB/s
+    d to h               1600.27 us      9.8 GB/s
+    d to hp               625.85 us     25.0 GB/s
+
+tensor.cpu()
+    d to h               7508.99 us      2.1 GB/s
+
+torch.zeros() &gt; tensor.copy_(src)
+    d to h               2511.02 us      6.2 GB/s
+    d to hp              1111.27 us     14.1 GB/s
+</code></pre><p>Unexpectedly, decreasing the data size to 11 MB increased the
+transfer rate to 10 GB/s.</p><pre><code>Data size: 11.0 MB
+Iterations: 5001
+Abbreviations: d-device, h-host, p-pinned
+
+tensor.to(device, dtype)
+    h to d                686.41 us     15.6 GB/s
+    hp to d               448.70 us     23.9 GB/s
+    d to h               1074.79 us     10.0 GB/s
+
+tensor.copy_(src)
+    h to d                682.12 us     15.7 GB/s
+    hp to d               445.84 us     24.1 GB/s
+    d to h               1087.43 us      9.9 GB/s
+    d to hp               432.49 us     24.8 GB/s
+
+tensor.cpu()
+    d to h               1071.93 us     10.0 GB/s
+
+torch.zeros() &gt; tensor.copy_(src)
+    d to h               1419.54 us      7.6 GB/s
+    d to hp               744.58 us     14.4 GB/s</code></pre><p>To me – this suggests some PyTorch mechanic to be the culprit.
+Regardless, the conclusion stays the same: the fastest way in PyTorch to
+transfer data from the device to the host is to use
+<code>.copy_(src)</code> with pinned host memory – on my machine.</p></article>
+</div>
+</main>
+<div class="page-footer-container">
+<footer class="page-footer container">
+<div>
+<span>Created by ThatSzucs.</span>
+<span>Website aesthetics borrowed from the
+                    <a href="https://developer.mozilla.org/en-US/blog/" rel="noopener noreferrer" target="_blank">MDN
+                        Blog<i class="fa fa-external-link"></i></a>.</span>
+</div>
+</footer>
+</div>
+</body>
+</html>

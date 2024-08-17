@@ -68,7 +68,7 @@ variations</a></li>
 <article>
 <!-- This is where the content goes -->
 <figure>
-<img src="experimental-setup.png"/>
+<img src="cover.png"/>
 </figure><h1 id="volume-measurement-in-two-phase-flow-systems-using-computer-vision-a-condensed-overview">Volume
 measurement in two-phase flow systems using computer vision:<br/>a
 condensed overview</h1><div class="article-date">
@@ -125,7 +125,7 @@ measurement of flow parameters of small-channel gas-liquid two-phase
 flow systems is illustrated through the example of a recently published
 chemical application <span class="citation" data-cites="obrienHydrogenationFlowHomogeneous2011"><a href="#ref-obrienHydrogenationFlowHomogeneous2011" role="doc-biblioref">[6]</a></span>.</p><figure>
 <img alt="Figure 1: The Taylor flow." class="small-figure" src="taylor-flow.png"/>
-<figcaption aria-hidden="true"><strong>Figure 1:</strong> The Taylor
+<figcaption><strong>Figure 1:</strong> The Taylor
 flow.</figcaption>
 </figure><p>A British research team has developed a reactor, based on a
 semi-permeable Teflon® AF-2400 membrane, which allows the advantageous
@@ -137,7 +137,7 @@ burette method at first, but was later simplified with a novel computer
 vision based “bubble counting” approach. The setup is depicted in Figure
 2.</p><figure>
 <img alt="Figure 2: The apparatus for measuring the outgassing [16]." class="small-figure" src="outgassing-measuring-apparatus.png"/>
-<figcaption aria-hidden="true"><strong>Figure 2:</strong> The apparatus
+<figcaption><strong>Figure 2:</strong> The apparatus
 for measuring the outgassing <span class="citation" data-cites="obrienHydrogenationFlowHomogeneous"><a href="#ref-obrienHydrogenationFlowHomogeneous" role="doc-biblioref">[16]</a></span>.</figcaption>
 </figure><p>Hydrogen has a low solubility in the used dichloromethane (DCM)
 solvent at atmospheric pressure. Therefore the amount of gas venting
@@ -151,7 +151,7 @@ photo and basic image processing, approximating the concentration of
 hydrogen was reduced to counting the number of red and white pixels, as
 seen in Figure 3.</p><figure>
 <img alt="Figure 3: The bubble counting method of [6]. a: calibration run, reactor not pressurized, hydrogen not present in the system. b: thresholding pixels to be either red or white. c: photograph of outlet tubing from pressurized reactor. d: thresholded image from pressurized reactor." src="bubble-counting-method.jpg"/>
-<figcaption aria-hidden="true"><strong>Figure 3:</strong> The bubble
+<figcaption><strong>Figure 3:</strong> The bubble
 counting method of <span class="citation" data-cites="obrienHydrogenationFlowHomogeneous2011"><a href="#ref-obrienHydrogenationFlowHomogeneous2011" role="doc-biblioref">[6]</a></span>. a: calibration run, reactor not
 pressurized, hydrogen not present in the system. b: thresholding pixels
 to be either red or white. c: photograph of outlet tubing from
@@ -183,7 +183,7 @@ in a resolution of 1280x720 pixels and 50 frames per second (fps) using
 a Canon EOS 70D camera equipped with Canon EF-S 60mm f/2.8 USM lens. The
 configuration is illustrated in Figure 4.</p><figure>
 <img alt="Figure 4: The experimental setup." src="experimental-setup.png"/>
-<figcaption aria-hidden="true"><strong>Figure 4:</strong> The
+<figcaption><strong>Figure 4:</strong> The
 experimental setup.</figcaption>
 </figure><p>The video recording section had an effective length of 7 cm and was
 constructed from a backlight source, a plastic ruler, a heat-resistant
@@ -211,7 +211,7 @@ border of the bubble. This turned out to be a cornerstone of the
 application: the bubble-edges could be darkened and made easily visible.
 See Figure 5 for a snapshot of a recorded video.</p><figure>
 <img alt="Figure 5: Snapshot of a recording." src="vlcsnap-2017-11-11-15h43m39s445.png"/>
-<figcaption aria-hidden="true"><strong>Figure 5:</strong> Snapshot of a
+<figcaption><strong>Figure 5:</strong> Snapshot of a
 recording.</figcaption>
 </figure><h3 id="algorithms">Algorithms</h3><p>The processing algorithm tasked with calculating the volume of the
 gas consisted of three main sections: the location, the tracking and the
@@ -289,7 +289,7 @@ simple computer vision pipelines at runtime. To increase the
 performance, the graphical and terminal displays were managed by their
 own process. See Figure 8 for a snapshot of the GUI.</p><figure>
 <img alt="Figure 8: Snapshot of the program in action. The status bar on the top shows the number of currently tracked objects, the number of already measured objects and the total measured volume. In the top-right corner, a frame counter shows the progress of the video. The green rectangle in the center represents the region of interest (ROI). The green line on the ruler connects the two points selected for the reference length calculation. Objects are assigned a random color upon their appearance, which is kept until they disappear; this enables the manual verification of the object tracking. For each bubble, their volume in μl (or mm^3), their length in pixels and their lifetime is printed alongside them." src="vlcsnap-2017-10-27-01h17m43s900.png">
-<figcaption aria-hidden="true"><strong>Figure 8:</strong> Snapshot of
+<figcaption><strong>Figure 8:</strong> Snapshot of
 the program in action. The status bar on the top shows the number of
 currently tracked objects, the number of already measured objects and
 the total measured volume. In the top-right corner, a frame counter
@@ -316,13 +316,13 @@ the available 20 millisecond time frame provided by the 50 fps videos.
 Lenovo W520 laptop equipped with an Nvidia Quadro 1000M GPU, 16GB of
 DDR3 RAM and an Intel i7-2670QM CPU.</p><figure>
 <img alt="Figure 9: The frame processing times of a video. The segment at the end with shorter processing times corresponds to the section of the video when no new bubbles appear anymore." src="frame-processing-times-1.png">
-<figcaption aria-hidden="true"><strong>Figure 9:</strong> The frame
+<figcaption><strong>Figure 9:</strong> The frame
 processing times of a video. The segment at the end with shorter
 processing times corresponds to the section of the video when no new
 bubbles appear anymore.</figcaption>
 </img></figure><figure>
 <img alt="Figure 10: The frame processing times of another video. The segment at the end with shorter processing times corresponds to the section of the video when no new bubbles appear anymore." src="frame-processing-times-2.png">
-<figcaption aria-hidden="true"><strong>Figure 10:</strong> The frame
+<figcaption><strong>Figure 10:</strong> The frame
 processing times of another video. The segment at the end with shorter
 processing times corresponds to the section of the video when no new
 bubbles appear anymore.</figcaption>
@@ -377,7 +377,7 @@ bubble-correction value can be determined. This enables the calibration
 of every measurement and the evaluation of the errors. The results are
 summarized in Figure 11 and Table 1.</p><figure>
 <img alt="Figure 11: Measurement calibration." src="measuring-accuracy.png">
-<figcaption aria-hidden="true"><strong>Figure 11:</strong> Measurement
+<figcaption><strong>Figure 11:</strong> Measurement
 calibration.</figcaption>
 </img></figure><figure>
 <table>
@@ -541,7 +541,7 @@ lengths or volumes. This, in turn, allows the evaluation of bubble
 attributes on a much wider scale, promoting the improvement of the
 volume-measuring technique.</p><figure>
 <img alt="Figure 12: Manual air injection with a syringe, enabling finer control of the bubble sizes." class="small-figure" src="manual-air-injection.png">
-<figcaption aria-hidden="true"><strong>Figure 12:</strong> Manual air
+<figcaption><strong>Figure 12:</strong> Manual air
 injection with a syringe, enabling finer control of the bubble
 sizes.</figcaption>
 </img></figure><h3 id="further-uses">Further uses</h3><p>The application measured the volume of the passing gas within the
