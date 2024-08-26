@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Accelerating data transfer with CUDA devices using pinned memory: a preview | ThatSzucs' Project Spotlights</title>
+<title>Accelerating data transfer with CUDA devices using pinned memory | ThatSzucs' Project Spotlights</title>
 <link href="../styles.css" rel="stylesheet"/>
 <link href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;💡&lt;/text&gt;&lt;/svg&gt;" rel="icon"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
@@ -45,7 +45,7 @@ memory</a></li>
 <li><a href="#pinned-c-arrays-as-pytorch-tensors">Pinned C++ arrays as
 PyTorch tensors</a></li>
 </ul></li>
-<li><a href="#conclusion">Conclusion</a></li>
+<li><a href="#summary">Summary</a></li>
 <li><a href="#references">References</a></li>
 <li><a href="#appendix">Appendix</a></li>
 </ul></section>
@@ -57,8 +57,8 @@ PyTorch tensors</a></li>
 <!-- This is where the content goes -->
 <figure>
 <img src="cover.png"/>
-</figure><h1 id="accelerating-data-transfer-with-cuda-devices-using-pinned-memory-a-preview">Accelerating
-data transfer with CUDA devices using pinned memory: a preview</h1><div class="article-date">
+</figure><h1 id="accelerating-data-transfer-with-cuda-devices-using-pinned-memory">Accelerating
+data transfer with CUDA devices using pinned memory</h1><div class="article-date">
 <p>2024.08.16.</p>
 <p>16 minute read</p>
 </div><p>Maximizing the performance of a program is not possible without
@@ -66,15 +66,16 @@ considering the target hardware. After all, different sets of hardware
 require different solutions. When it comes to working with CUDA devices,
 pinned memory is an important optimization tool. If properly utilized,
 it can improve the bandwidth with the device, which is important in many
-areas including deep learning.</p><h2 id="incentive-for-performance">Incentive for performance</h2><p>“The purpose of all programs, and all parts of those programs, is to
+areas, including deep learning.</p><h2 id="incentive-for-performance">Incentive for performance</h2><p>“The purpose of all programs, and all parts of those programs, is to
 transform data from one form to another.”, said Mike Acton in his
-presentation at CppCon <span class="citation" data-cites="actonDataOrientedDesign2014"><a href="#ref-actonDataOrientedDesign2014" role="doc-biblioref">[1]</a></span>. Later he continued: “Software does
-not run in a magic fairy aether…”</p><p>Throughout his talk, the former VP of Unity3d and Engine Director at
-Insomniac Games stresses the importance of programmers understanding the
-data and the hardware that they work on, so they can understand the
-(data transformation) problem, and solve it appropriately. His points
-are demonstrated through examples. He shows the significance of data
-arrangement, and how it affects the utilization of the CPU cache <span class="citation" data-cites="meyersCpuCachesWhy2014"><a href="#ref-meyersCpuCachesWhy2014" role="doc-biblioref">[2]</a></span>,
+presentation at CppCon <span class="citation" data-cites="actonDataOrientedDesign2014"><a href="#ref-actonDataOrientedDesign2014" role="doc-biblioref">[1]</a></span>. The former VP of Unity3d and Engine
+Director at Insomniac Games later continued: “Software does not run in a
+magic fairy aether…”</p><p>Throughout his talk, Acton stressed the importance of programmers
+understanding the data and the hardware that they work on, so they can
+understand the (data transformation) problem, and solve it
+appropriately. His points are demonstrated through examples. He shows
+the significance of data arrangement, and how it affects the utilization
+of the CPU cache <span class="citation" data-cites="meyersCpuCachesWhy2014"><a href="#ref-meyersCpuCachesWhy2014" role="doc-biblioref">[2]</a></span>,
 the memory bandwidth and the overall speed.</p><p>In the video game industry, performance is key <span class="citation" data-cites="actonDataOrientedDesign2014"><a href="#ref-actonDataOrientedDesign2014" role="doc-biblioref">[1]</a></span>. Creators can only add elements (be
 those mechanics or visuals) if there is enough space for them;
 otherwise, the time requirements of a frame would not be met and the
@@ -94,11 +95,11 @@ two months of training. (The numbers for the original version fluctuated
 between this scale and three-times larger.) At such a scale, the
 reduction of the running costs alone is enough of an incentive to
 maximize performance.</p><p>Programs can be accelerated in multiple ways: upgrading the hardware,
-using a more performant language, switching the data structures and
-fine-tuning the algorithms. Depending on the field of application, these
-topics are discussed online to various degrees. I feel, however, that
-one particular topic in the context of PyTorch, C++ and CUDA deserves
-more publicity: pinned host memory <span class="citation" data-cites="harrisHowOptimizeData2012 midkiffGPUTeachingKit faticaOptimization2014 CUDASemantics"><a href="#ref-harrisHowOptimizeData2012" role="doc-biblioref">[7]</a>, <a href="#ref-midkiffGPUTeachingKit" role="doc-biblioref">[8]</a>, <a href="#ref-faticaOptimization2014" role="doc-biblioref">[9]</a>, <a href="#ref-CUDASemantics" role="doc-biblioref">[10]</a></span>.</p><h2 id="pinned-memory">Pinned memory</h2><p>Modern computers use virtual memory (VM) <span class="citation" data-cites="VirtualMemory2024 midkiffGPUTeachingKit bhattacharjeeArchitecturalOperatingSystem2017 VirtualMemoryPages2016"><a href="#ref-midkiffGPUTeachingKit" role="doc-biblioref">[8]</a>, <a href="#ref-VirtualMemory2024" role="doc-biblioref">[11]</a>, <a href="#ref-bhattacharjeeArchitecturalOperatingSystem2017" role="doc-biblioref">[12]</a>, <a href="#ref-VirtualMemoryPages2016" role="doc-biblioref">[13]</a></span>. It is an abstraction that
+using a faster language, switching the data structures and fine-tuning
+the algorithms. Depending on the field of application, these topics are
+discussed online to various degrees. I feel, however, that one
+particular topic in the context of PyTorch, C++ and CUDA deserves more
+publicity: pinned host memory <span class="citation" data-cites="harrisHowOptimizeData2012 midkiffGPUTeachingKit faticaOptimization2014 CUDASemantics"><a href="#ref-harrisHowOptimizeData2012" role="doc-biblioref">[7]</a>, <a href="#ref-midkiffGPUTeachingKit" role="doc-biblioref">[8]</a>, <a href="#ref-faticaOptimization2014" role="doc-biblioref">[9]</a>, <a href="#ref-CUDASemantics" role="doc-biblioref">[10]</a></span>.</p><h2 id="pinned-memory">Pinned memory</h2><p>Modern computers use virtual memory (VM) <span class="citation" data-cites="VirtualMemory2024 midkiffGPUTeachingKit bhattacharjeeArchitecturalOperatingSystem2017 VirtualMemoryPages2016"><a href="#ref-midkiffGPUTeachingKit" role="doc-biblioref">[8]</a>, <a href="#ref-VirtualMemory2024" role="doc-biblioref">[11]</a>, <a href="#ref-bhattacharjeeArchitecturalOperatingSystem2017" role="doc-biblioref">[12]</a>, <a href="#ref-VirtualMemoryPages2016" role="doc-biblioref">[13]</a></span>. It is an abstraction that
 decouples user code from the storage resources available on a given
 machine. Programs access memory using virtual addresses; these are
 translated by the processor and the operating system (OS) into physical
@@ -340,17 +341,17 @@ approaches. Secondly, a tensor that shares memory with a bound array
 automatically receives the same benefits from being in pinned memory as
 a regular tensor does; no need for additional tinkering. Lastly, a
 vector-turned-tensor and a regular PyTorch tensor perform equally under
-the same conditions.</p><h2 id="conclusion">Conclusion</h2><p>Certain areas have a strong incentive for maximizing the performance
+the same conditions.</p><h2 id="summary">Summary</h2><p>Certain areas have a strong incentive for maximizing the performance
 of programs. To do so, it is crucial to understand the data and the
 hardware that is worked on. When it comes to working with PyTorch, C++
 and CUDA devices, utilizing pinned memory is an important optimization
 step that I feel is worth more publicity.</p><p>Modern computers use virtual memory. It is an abstraction that
 decouples programs from the storage resources of a given machine.
 Alongside the RAM, computers can also make use of a secondary storage
-(disks, SSDs), which enables them to exceed the size of available
-memory. For certain uses, however, data must remain (at the same
-location) within the RAM. Devices using direct memory access (DMA) –
-such as GPUs – are prime examples. To achieve this, memory segments can
+(disks, SSDs), which enables them to exceed the size of the available
+memory. For certain uses, however, data must remain – at the same
+location – within the RAM. Devices using direct memory access (DMA),
+such as GPUs, are prime examples. To achieve this, memory segments can
 be pinned.</p><p>Unlike regular pageable memory, pinned memory can be directly
 accessed by the device (GPU). This allows data to be read or written
 with much higher bandwidth. In a custom PyTorch benchmark, switching to
@@ -513,8 +514,8 @@ tensor.cpu()
 torch.zeros() &gt; tensor.copy_(src)
     d to h               2511.02 us      6.2 GB/s
     d to hp              1111.27 us     14.1 GB/s
-</code></pre><p>Unexpectedly, decreasing the data size to 11 MB increased the
-transfer rate to 10 GB/s.</p><pre><code>Data size: 11.0 MB
+</code></pre><p>Unexpectedly, decreasing the data size from 16 MB to 11 MB increased
+the transfer rate to 10 GB/s.</p><pre><code>Data size: 11.0 MB
 Iterations: 5001
 Abbreviations: d-device, h-host, p-pinned
 
@@ -534,10 +535,11 @@ tensor.cpu()
 
 torch.zeros() &gt; tensor.copy_(src)
     d to h               1419.54 us      7.6 GB/s
-    d to hp               744.58 us     14.4 GB/s</code></pre><p>To me – this suggests some PyTorch mechanic to be the culprit.
-Regardless, the conclusion stays the same: the fastest way in PyTorch to
-transfer data from the device to the host is to use
-<code>.copy_(src)</code> with pinned host memory – on my machine.</p></article>
+    d to hp               744.58 us     14.4 GB/s</code></pre><p>To me – this suggests some PyTorch mechanic to be the underlying
+culprit. Regardless, the conclusion stays the same:
+<code>.copy_(src)</code> with pinned host memory is significantly faster
+than <code>.to(device, dtype)</code> for moving data from the device to
+the host in PyTorch.</p></article>
 </div>
 </main>
 <div class="page-footer-container">
