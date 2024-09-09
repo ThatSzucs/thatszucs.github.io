@@ -149,6 +149,11 @@ figure {
     margin: 2rem auto 2rem;
 }
 
+/* Post cover image needs no gap before it */
+article>figure:first-of-type {
+    margin: 0 auto 2rem;
+}
+
 figure>img {
     /*To make small ones go into the middle*/
     display: flex;
@@ -167,11 +172,6 @@ figure>.multi-img-figure {
     .small-figure {
         max-width: 80%;
     }
-}
-
-/* Post cover image big*/
-article>figure:first-of-type {
-    margin: 0 auto 0;
 }
 
 figure>figcaption {
@@ -300,21 +300,25 @@ article .article-date {
 
 .blog-post h1 {
     font-size: var(--type-heading-h1-font-size);
+    line-height: var(--heading-line-height);
     margin: 0 0 .5rem;
 }
 
 .blog-post h2 {
     font-size: var(--type-heading-h2-font-size);
+    line-height: var(--heading-line-height);
     margin: 2rem 0 .5rem;
 }
 
 .blog-post h3 {
     font-size: var(--type-heading-h3-font-size);
+    line-height: var(--heading-line-height);
     margin: 2rem 0 .5rem;
 }
 
 .blog-post h4 {
     font-size: var(--type-heading-h4-font-size);
+    line-height: var(--heading-line-height);
     margin: 2rem 0 .5rem;
 }
 
@@ -471,11 +475,45 @@ pre {
     border-radius: var(--elem-radius);
     font-family: var(--font-code);
     font-size: var(--type-smaller-font-size);
+    background-color: var(--code-background-inline);
 }
 
 pre {
     overflow: auto;
 }
+
+/* Syntax highlighting */
+div.sourceCode { color: #fff; background-color: #303030; }
+/* Alert */ code span.al { color: #ffcfaf; }
+/* Annotation */ code span.an { color: hsl(120, 50%, 45%); font-weight: bold; }
+/* Attribute */ code span.at { }
+/* BaseN */ code span.bn { color: #dca3a3; }
+/* BuiltIn */ code span.bu { }
+/* Char */ code span.ch { color: #dca3a3; }
+/* Comment */ code span.co { color: hsl(120, 50%, 45%); }
+/* CommentVar */ code span.cv { color: hsl(120, 50%, 45%); font-weight: bold; }
+/* Constant */ code span.cn { color: #dca3a3; font-weight: bold; }
+/* ControlFlow */ code span.cf { color: hsl(44, 90%, 75%); }
+/* DataType */ code span.dt { color: hsl(190, 100%, 75%); }
+/* DecVal */ code span.dv { color: #dcdccc; }
+/* Documentation */ code span.do { color: hsl(120, 50%, 45%); }
+/* Error */ code span.er { color: #c3bf9f; }
+/* Extension */ code span.ex { }
+/* Float */ code span.fl { color: #c0bed1; }
+/* Function */ code span.fu { color: #efef8f; }
+/* Import */ code span.im { }
+/* Information */ code span.in { color: hsl(120, 50%, 45%); font-weight: bold; }
+/* Keyword */ code span.kw { color: hsl(44, 90%, 75%); }
+/* Operator */ code span.op { color: #f0efd0; }
+/* Other */ code span.ot { color: #efef8f; }
+/* Preprocessor */ code span.pp { color: #ffcfaf; font-weight: bold; }
+/* SpecialChar */ code span.sc { color: #dca3a3; }
+/* SpecialString */ code span.ss { color: hsl(20, 60%, 70%); }
+/* String */ code span.st { color: hsl(20, 60%, 70%); }
+/* Variable */ code span.va { }
+/* VerbatimString */ code span.vs { color: hsl(20, 60%, 70%); }
+/* Warning */ code span.wa { color: hsl(120, 50%, 45%); font-weight: bold; }
+
 
 /* Citations and references */
 
@@ -502,6 +540,11 @@ pre {
 .csl-right-inline {
     margin-left: 2em;
     padding-left: 1em;
+}
+
+#refs {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
 /* External link favicon */
